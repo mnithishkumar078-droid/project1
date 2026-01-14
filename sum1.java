@@ -15,7 +15,7 @@ public class sum1{
             s=s/10;
             }
             System.out.print(d);
-
+            n.close();
         }
 
         
