@@ -1,8 +1,9 @@
 import os
+from pathlib import Path
 from datetime import datetime, timezone
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -16,6 +17,7 @@ USERS_COLLECTION = os.getenv("USERS_COLLECTION", "users")
 
 
 app = Flask(__name__)
+FRONTEND_DIR = Path(__file__).resolve().parent.parent
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 users = db[USERS_COLLECTION]
@@ -25,6 +27,19 @@ users.create_index("username", unique=True)
 @app.get("/health")
 def health() -> tuple:
     return jsonify({"status": "ok", "database": MONGO_DB}), 200
+
+
+@app.get("/")
+def home() -> tuple:
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.get("/<path:asset_path>")
+def static_assets(asset_path: str) -> tuple:
+    asset = FRONTEND_DIR / asset_path
+    if asset.is_file():
+        return send_from_directory(FRONTEND_DIR, asset_path)
+    return jsonify({"error": "not found"}), 404
 
 
 @app.post("/register")
