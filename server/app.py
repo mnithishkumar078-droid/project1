@@ -27,6 +27,28 @@ candidates = db[CANDIDATES_COLLECTION]
 users.create_index("username", unique=True)
 
 
+def ensure_default_admin() -> None:
+    admin_username = "admin"
+    admin_password = "admin@123"
+
+    existing_admin = users.find_one({"username": admin_username})
+    if existing_admin:
+        return
+
+    users.insert_one(
+        {
+            "fullName": "System Admin",
+            "username": admin_username,
+            "passwordHash": generate_password_hash(admin_password),
+            "role": "admin",
+            "createdAt": datetime.now(timezone.utc),
+        }
+    )
+
+
+ensure_default_admin()
+
+
 def normalize_candidate(candidate_doc: dict) -> dict:
     return {
         "id": str(candidate_doc["_id"]),
@@ -107,6 +129,7 @@ def login() -> tuple:
                     "id": str(user["_id"]),
                     "fullName": user["fullName"],
                     "username": user["username"],
+                    "role": user.get("role", "voter"),
                 },
             }
         ),
