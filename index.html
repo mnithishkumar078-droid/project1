@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnlineVoting - Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background: white;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .logo i {
+            color: #2a5298;
+            margin-right: 10px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-menu li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-menu li a:hover {
+            color: #2a5298;
+        }
+
+        .nav-menu li a.active {
+            color: #2a5298;
+            font-weight: 600;
+        }
+
+        .nav-menu li a i {
+            font-size: 14px;
+        }
+
+        .vote-now-btn {
+            background: #e74c3c;
+            color: white !important;
+            padding: 10px 20px;
+            border-radius: 50px;
+        }
+
+        .vote-now-btn:hover {
+            background: #c0392b;
+            color: white !important;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 60px 80px;
+            color: white;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero-content {
+            flex: 1;
+        }
+
+        .hero-content h1 {
+            font-size: 52px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-content h1 span {
+            color: #f1c40f;
+            display: block;
+        }
+
+        .hero-content p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .hero-stat-item {
+            text-align: center;
+        }
+
+        .hero-stat-number {
+            font-size: 36px;
+            font-weight: 700;
+            color: #f1c40f;
+        }
+
+        .hero-stat-label {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
+
+        .hero-image {
+            flex: 1;
+            text-align: right;
+        }
+
+        .hero-image i {
+            font-size: 250px;
+            color: rgba(255,255,255,0.15);
+        }
+
+        /* Features Section */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 60px 80px;
+            background: white;
+            max-width: 1400px;
+            margin: 40px auto;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .feature-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .feature-card i {
+            font-size: 48px;
+            color: #2a5298;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            padding: 40px 80px;
+            text-align: center;
+        }
+
+        .section-title {
+            color: white;
+            font-size: 36px;
+            margin-bottom: 40px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: #f1c40f;
+            color: #1e3c72;
+        }
+
+        .btn-primary:hover {
+            background: #f39c12;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(241, 196, 15, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #1e3c72;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.3);
+        }
+
+        .btn-admin {
+            background: #e67e22;
+            color: white;
+        }
+
+        .btn-admin:hover {
+            background: #d35400;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(230, 126, 34, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .nav-menu {
+                margin-top: 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .hero {
+                flex-direction: column;
+                padding: 40px 20px;
+                text-align: center;
+            }
+
+            .hero-content h1 span {
+                display: inline;
+            }
+
+            .hero-stats {
+                justify-content: center;
+            }
+
+            .hero-image {
+                display: none;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                padding: 40px 20px;
+                margin: 20px;
+            }
+
+            .quick-actions {
+                padding: 40px 20px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-check-circle"></i> OnlineVoting
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html" class="active"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+            <li><a href="votenow.html"><i class="fas fa-vote-yea"></i> Vote Now</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1>
+                Your Voice Matters,
+                <span>Make It Count</span>
+            </h1>
+            <p>Secure, transparent, and accessible digital voting platform.<br>Participate in democracy from anywhere in the world.</p>
+            
+            <div class="hero-stats">
+                <div class="hero-stat-item">
+                    <div class="hero-stat-number">10K+</div>
+                    <div class="hero-stat-label">Registered Voters</div>
+                </div>
+                <div class="hero-stat-item">
+                    <div class="hero-stat-number">50+</div>
+                    <div class="hero-stat-label">Active Elections</div>
+                </div>
+                <div class="hero-stat-item">
+                    <div class="hero-stat-number">4.9</div>
+                    <div class="hero-stat-label">User Rating</div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <i class="fas fa-vote-yea"></i>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features">
+        <div class="feature-card">
+            <i class="fas fa-shield-alt"></i>
+            <h3>Secure & Encrypted</h3>
+            <p>Bank-grade encryption ensures your vote remains confidential and tamper-proof throughout the process.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-globe"></i>
+            <h3>Accessible Anywhere</h3>
+            <p>Cast your vote from any device, anywhere in the world. No need to visit physical polling stations.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Real-time Results</h3>
+            <p>View election results instantly after voting ends with our transparent counting system.</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h2 class="section-title">Get Started Today</h2>
+        <div class="action-buttons">
+            <a href="register.html" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Register to Vote
+            </a>
+            <a href="login.html" class="btn btn-secondary">
+                <i class="fas fa-sign-in-alt"></i> Login to Account
+            </a>
+            <a href="admin-dashboard.html" class="btn btn-admin">
+                <i class="fas fa-crown"></i> Admin Portal
+            </a>
+        </div>
+    </div>
+</body>
+</html>

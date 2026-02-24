@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - Online Voting System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: white;
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .logo i {
+            color: #764ba2;
+            margin-right: 10px;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+        }
+
+        .nav-menu li a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-menu li a:hover, .nav-menu li a.active {
+            color: #667eea;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .about-card {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .about-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .about-header i {
+            font-size: 60px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .about-header h1 {
+            color: #333;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .about-header p {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .about-content h2 {
+            color: #333;
+            font-size: 28px;
+            margin: 30px 0 20px;
+        }
+
+        .about-content p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9ff;
+            border-radius: 15px;
+        }
+
+        .feature-item i {
+            font-size: 40px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .feature-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .feature-item p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .team-member {
+            text-align: center;
+        }
+
+        .team-member img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 5px solid #667eea20;
+        }
+
+        .team-member h4 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .team-member p {
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 20px;
+            }
+            .nav-menu {
+                margin-top: 20px;
+            }
+            .features-grid, .team-grid {
+                grid-template-columns: 1fr;
+            }
+            .about-card {
+                padding: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-check-circle"></i> OnlineVoting
+        </div>
+        <ul class="nav-menu">
+            <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="about.html" class="active"><i class="fas fa-info-circle"></i> About</a></li>
+            <!-- Elections and Candidates pages removed -->
+            <li><a href="votenow.html" class="vote-now-btn"><i class="fas fa-vote-yea"></i> Vote Now</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="about-card">
+            <div class="about-header">
+                <i class="fas fa-vote-yea"></i>
+                <h1>About OnlineVoting</h1>
+                <p>Empowering Democracy Through Technology</p>
+            </div>
+
+            <div class="about-content">
+                <h2>Our Mission</h2>
+                <p>OnlineVoting is dedicated to making the democratic process more accessible, secure, and transparent. We believe that every citizen should have the opportunity to participate in elections conveniently from anywhere in the world, while maintaining the highest standards of security and integrity.</p>
+
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Secure & Encrypted</h3>
+                        <p>Bank-grade encryption ensures your vote remains confidential</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-globe"></i>
+                        <h3>Global Access</h3>
+                        <p>Vote from anywhere, anytime, on any device</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-id-card"></i>
+                        <h3>Aadhaar Verified</h3>
+                        <p>Secure identity verification using Aadhaar e-KYC</p>
+                    </div>
+                </div>
+
+                <h2>How It Works</h2>
+                <p>Our platform uses Aadhaar e-KYC for voter verification, ensuring that each eligible citizen can vote only once. The entire process is transparent and auditable, with real-time result counting and publication.</p>
+
+                <h2>Our Team</h2>
+                <div class="team-grid">
+                    <div class="team-member">
+                        <img src="https://via.placeholder.com/150" alt="Team Member">
+                        <h4>John Doe</h4>
+                        <p>Founder & CEO</p>
+                    </div>
+                    <div class="team-member">
+                        <img src="https://via.placeholder.com/150" alt="Team Member">
+                        <h4>Jane Smith</h4>
+                        <p>CTO</p>
+                    </div>
+                    <div class="team-member">
+                        <img src="https://via.placeholder.com/150" alt="Team Member">
+                        <h4>Mike Johnson</h4>
+                        <p>Security Lead</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

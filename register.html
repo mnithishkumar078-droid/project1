@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Online Voting System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .register-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+        }
+        
+        .back-link {
+            margin-bottom: 30px;
+        }
+        
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        
+        .back-link a:hover {
+            color: #5a67d8;
+        }
+        
+        .register-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .register-header i {
+            font-size: 50px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .register-header h2 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .register-header p {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-group label i {
+            margin-right: 8px;
+            color: #667eea;
+        }
+        
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .input-group i:first-child {
+            position: absolute;
+            left: 15px;
+            color: #999;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 15px 45px 15px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            color: #999;
+            cursor: pointer;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+        
+        .toggle-password:hover {
+            color: #667eea;
+        }
+        
+        .aadhaar-section {
+            background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%);
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .aadhaar-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+        
+        .aadhaar-section p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background: white;
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .file-input input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-input-content {
+            text-align: center;
+        }
+        
+        .file-input-content i {
+            font-size: 40px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .file-input-content span {
+            display: block;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .file-input-content small {
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f9ff;
+            border-radius: 5px;
+            color: #667eea;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            display: none;
+        }
+        
+        .file-name.show {
+            display: flex;
+        }
+        
+        .age-verification {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .age-verification.eligible {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .age-verification.not-eligible {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .age-verification i {
+            margin-right: 8px;
+        }
+        
+        .kyc-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+        
+        .kyc-details.show {
+            display: block;
+        }
+        
+        .kyc-details h4 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .kyc-details p {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .kyc-details strong {
+            color: #333;
+        }
+        
+        .terms {
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .terms input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .terms label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .terms a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .terms a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-register {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .btn-register:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-register:disabled {
+            background: #b1b9f0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .login-link {
+            text-align: center;
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .security-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .age-required {
+            font-size: 12px;
+            color: #e53e3e;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .age-required.show {
+            display: block;
+        }
+        
+        @media (max-width: 768px) {
+            .register-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="security-badge">
+            <i class="fas fa-shield-alt"></i> Age Verification Required
+        </div>
+        
+        <div class="back-link">
+            <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        </div>
+        
+        <div class="register-header">
+            <i class="fas fa-user-plus"></i>
+            <h2>Create Account</h2>
+            <p>Register with your details and verify Aadhaar (18+ only)</p>
+        </div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Full Name</label>
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user-circle"></i> Username</label>
+                <div class="input-group">
+                    <i class="fas fa-user-circle"></i>
+                    <input type="text" id="username" placeholder="Choose a username" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Create a password" required>
+                    <i class="fas fa-eye toggle-password" onclick="togglePassword('password')"></i>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Confirm Password</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                    <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPassword')"></i>
+                </div>
+            </div>
+            
+            <div class="aadhaar-section">
+                <h3><i class="fas fa-id-card"></i> Aadhaar e-KYC Verification (Age 18+ Required)</h3>
+                <p>Upload your Aadhaar offline e-KYC XML file for age verification</p>
+                
+                <div class="file-input" onclick="document.getElementById('aadhaarFile').click()">
+                    <input type="file" id="aadhaarFile" accept=".xml" onchange="handleFileUpload(this)" required>
+                    <div class="file-input-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>Click to upload XML file</span>
+                        <small>or drag and drop</small>
+                    </div>
+                </div>
+                
+                <div id="fileName" class="file-name">
+                    <i class="fas fa-check-circle"></i>
+                    <span id="fileNameText"></span>
+                </div>
+                
+                <div id="ageVerification" class="age-verification"></div>
+                <div id="ageRequired" class="age-required"><i class="fas fa-exclamation-triangle"></i> You must be 18 or older to register</div>
+                
+                <div id="kycDetails" class="kyc-details">
+                    <h4><i class="fas fa-user-check"></i> Aadhaar Details:</h4>
+                    <p><strong>Name:</strong> <span id="aadhaarName"></span></p>
+                    <p><strong>Date of Birth:</strong> <span id="aadhaarDob"></span></p>
+                    <p><strong>Age:</strong> <span id="aadhaarAge"></span> years</p>
+                    <p><strong>Gender:</strong> <span id="aadhaarGender"></span></p>
+                    <p><strong>Reference ID:</strong> <span id="aadhaarRef"></span></p>
+                </div>
+            </div>
+            
+            <div class="terms">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+            </div>
+            
+            <button type="submit" class="btn-register" id="registerBtn" disabled>
+                <i class="fas fa-user-plus"></i> Register & Verify
+            </button>
+            
+            <div class="login-link">
+                Already have an account? <a href="login.html">Login here</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Aadhaar XML Parser Class
+        class AadhaarXMLParser {
+            constructor(xmlContent) {
+                this.xmlContent = xmlContent;
+                this.parser = new DOMParser();
+                this.xmlDoc = this.parser.parseFromString(xmlContent, "text/xml");
+                this.data = {};
+            }
+
+            parseXML() {
+                try {
+                    const root = this.xmlDoc.documentElement;
+                    
+                    // Extract reference ID
+                    this.data.reference_id = root.getAttribute('referenceId');
+                    
+                    // Find UidData
+                    const uidData = root.querySelector('UidData');
+                    
+                    if (uidData) {
+                        // Extract Poi (Proof of Identity)
+                        const poi = uidData.querySelector('Poi');
+                        if (poi) {
+                            this.data.personal_details = {
+                                name: poi.getAttribute('name'),
+                                dob: poi.getAttribute('dob'),
+                                gender: poi.getAttribute('gender'),
+                                dob_matching_score: poi.getAttribute('m')
+                            };
+                        }
+                        
+                        // Extract Poa (Proof of Address)
+                        const poa = uidData.querySelector('Poa');
+                        if (poa) {
+                            this.data.address_details = {
+                                care_of: poa.getAttribute('careof'),
+                                house: poa.getAttribute('house'),
+                                street: poa.getAttribute('street'),
+                                landmark: poa.getAttribute('landmark'),
+                                locality: poa.getAttribute('loc'),
+                                village_town_city: poa.getAttribute('vtc'),
+                                post_office: poa.getAttribute('po'),
+                                sub_district: poa.getAttribute('subdist'),
+                                district: poa.getAttribute('dist'),
+                                state: poa.getAttribute('state'),
+                                country: poa.getAttribute('country'),
+                                pincode: poa.getAttribute('pc')
+                            };
+                        }
+                        
+                        // Extract Photo (Base64)
+                        const pht = uidData.querySelector('Pht');
+                        if (pht && pht.textContent) {
+                            this.data.photo_base64 = pht.textContent;
+                        }
+                    }
+                    
+                    return this.data;
+                } catch (error) {
+                    console.error('Error parsing XML:', error);
+                    throw error;
+                }
+            }
+
+            calculateAge(dobString) {
+                if (!dobString) return null;
+                
+                try {
+                    const parts = dobString.split('-');
+                    if (parts.length === 3) {
+                        const birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                        const today = new Date();
+                        
+                        let age = today.getFullYear() - birthDate.getFullYear();
+                        const monthDiff = today.getMonth() - birthDate.getMonth();
+                        
+                        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                            age--;
+                        }
+                        
+                        return age;
+                    }
+                    return null;
+                } catch {
+                    return null;
+                }
+            }
+
+            formatDate(dobString) {
+                if (!dobString) return 'N/A';
+                try {
+                    const parts = dobString.split('-');
+                    if (parts.length === 3) {
+                        const date = new Date(parts[2], parts[1] - 1, parts[0]);
+                        return date.toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                    }
+                    return dobString;
+                } catch {
+                    return dobString;
+                }
+            }
+
+            getSummary() {
+                const summary = {};
+                
+                if (this.data.personal_details) {
+                    summary.name = this.data.personal_details.name || 'N/A';
+                    summary.dob = this.formatDate(this.data.personal_details.dob);
+                    summary.age = this.calculateAge(this.data.personal_details.dob);
+                    summary.gender = this.data.personal_details.gender || 'N/A';
+                }
+                
+                summary.reference_id = this.data.reference_id || 'N/A';
+                summary.has_photo = !!this.data.photo_base64;
+                
+                return summary;
+            }
+        }
+
+        let parsedAadhaarData = null;
+        let isEligible = false;
+        
+        function togglePassword(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+        
+        function handleFileUpload(input) {
+            const fileNameDiv = document.getElementById('fileName');
+            const fileNameText = document.getElementById('fileNameText');
+            const ageVerification = document.getElementById('ageVerification');
+            const ageRequired = document.getElementById('ageRequired');
+            const kycDetails = document.getElementById('kycDetails');
+            const registerBtn = document.getElementById('registerBtn');
+            const termsCheckbox = document.getElementById('terms');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                fileNameText.textContent = file.name;
+                fileNameDiv.classList.add('show');
+                
+                // Reset status
+                ageVerification.className = 'age-verification';
+                ageVerification.innerHTML = '';
+                ageRequired.classList.remove('show');
+                kycDetails.classList.remove('show');
+                
+                // Read and parse XML file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const xmlContent = e.target.result;
+                        
+                        // Parse XML
+                        const parser = new AadhaarXMLParser(xmlContent);
+                        const parsedData = parser.parseXML();
+                        
+                        if (parsedData.personal_details && parsedData.personal_details.name) {
+                            parsedAadhaarData = parsedData;
+                            
+                            // Get summary
+                            const summary = parser.getSummary();
+                            
+                            // Update UI
+                            document.getElementById('aadhaarName').textContent = summary.name;
+                            document.getElementById('aadhaarDob').textContent = summary.dob;
+                            document.getElementById('aadhaarAge').textContent = summary.age || 'N/A';
+                            document.getElementById('aadhaarGender').textContent = summary.gender;
+                            document.getElementById('aadhaarRef').textContent = summary.reference_id;
+                            
+                            kycDetails.classList.add('show');
+                            
+                            // Check age eligibility
+                            if (summary.age && summary.age >= 18) {
+                                isEligible = true;
+                                ageVerification.className = 'age-verification eligible';
+                                ageVerification.innerHTML = '<i class="fas fa-check-circle"></i> Age verified: ' + summary.age + ' years - Eligible to vote!';
+                                ageRequired.classList.remove('show');
+                                
+                                // Enable register button if terms are checked
+                                if (termsCheckbox.checked) {
+                                    registerBtn.disabled = false;
+                                }
+                                
+                                // Auto-fill name
+                                const nameInput = document.getElementById('fullName');
+                                if (!nameInput.value) {
+                                    nameInput.value = summary.name;
+                                }
+                            } else {
+                                isEligible = false;
+                                ageVerification.className = 'age-verification not-eligible';
+                                ageVerification.innerHTML = '<i class="fas fa-times-circle"></i> Age: ' + (summary.age || 'Unknown') + ' years - Not eligible (Must be 18+)';
+                                ageRequired.classList.add('show');
+                                registerBtn.disabled = true;
+                            }
+                            
+                            console.log('Aadhaar parsed:', parsedAadhaarData);
+                        } else {
+                            throw new Error('Invalid Aadhaar XML format');
+                        }
+                    } catch (error) {
+                        ageVerification.className = 'age-verification not-eligible';
+                        ageVerification.innerHTML = '<i class="fas fa-exclamation-circle"></i> Invalid Aadhaar XML file';
+                        registerBtn.disabled = true;
+                        isEligible = false;
+                        parsedAadhaarData = null;
+                    }
+                };
+                
+                reader.readAsText(file);
+            }
+        }
+        
+        // Enable/disable register button based on terms
+        document.getElementById('terms').addEventListener('change', function() {
+            const registerBtn = document.getElementById('registerBtn');
+            if (this.checked && isEligible) {
+                registerBtn.disabled = false;
+            } else {
+                registerBtn.disabled = true;
+            }
+        });
+        
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            // Validate password strength
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long!');
+                return;
+            }
+            
+            if (!parsedAadhaarData) {
+                alert('Please upload and verify your Aadhaar!');
+                return;
+            }
+            
+            if (!isEligible) {
+                alert('Sorry, you must be 18 years or older to register.');
+                return;
+            }
+            
+            // Get existing users
+            const users = JSON.parse(localStorage.getItem('voters')) || [];
+            
+            // Check if username already exists
+            if (users.some(u => u.username === username)) {
+                alert('Username already taken!');
+                return;
+            }
+            
+            // Create new user
+            const newUser = {
+                fullName: fullName,
+                username: username,
+                password: password,
+                aadhaarVerified: true,
+                aadhaarData: {
+                    name: parsedAadhaarData.personal_details.name,
+                    dob: parsedAadhaarData.personal_details.dob,
+                    gender: parsedAadhaarData.personal_details.gender,
+                    reference_id: parsedAadhaarData.reference_id
+                },
+                registrationDate: new Date().toISOString(),
+                hasVoted: false
+            };
+            
+            // Save to localStorage
+            users.push(newUser);
+            localStorage.setItem('voters', JSON.stringify(users));
+            
+            // Store in MongoDB via API if available
+            fetch('/api/extract', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: 'registration',
+                    data: {
+                        username: username,
+                        fullName: fullName,
+                        aadhaarRef: parsedAadhaarData.reference_id
+                    }
+                })
+            }).catch(err => console.log('MongoDB storage not available:', err));
+            
+            alert('Registration successful! You can now login with your username and password.');
+            window.location.href = 'login.html';
+        });
+        
+        // Check for duplicate username as user types
+        document.getElementById('username').addEventListener('input', function() {
+            const username = this.value;
+            if (username.length >= 3) {
+                const users = JSON.parse(localStorage.getItem('voters')) || [];
+                if (users.some(u => u.username === username)) {
+                    this.setCustomValidity('Username already taken');
+                    this.reportValidity();
+                } else {
+                    this.setCustomValidity('');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
