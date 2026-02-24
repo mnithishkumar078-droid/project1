@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timezone
 
+from bson import ObjectId
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 from pymongo import MongoClient
@@ -14,6 +15,7 @@ load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 MONGO_DB = os.getenv("MONGO_DB", "online_voting")
 USERS_COLLECTION = os.getenv("USERS_COLLECTION", "users")
+CANDIDATES_COLLECTION = os.getenv("CANDIDATES_COLLECTION", "candidates")
 
 
 app = Flask(__name__)
@@ -21,7 +23,18 @@ FRONTEND_DIR = Path(__file__).resolve().parent.parent
 client = MongoClient(MONGO_URI)
 db = client[MONGO_DB]
 users = db[USERS_COLLECTION]
+candidates = db[CANDIDATES_COLLECTION]
 users.create_index("username", unique=True)
+
+
+def normalize_candidate(candidate_doc: dict) -> dict:
+    return {
+        "id": str(candidate_doc["_id"]),
+        "name": candidate_doc.get("name", ""),
+        "party": candidate_doc.get("party", ""),
+        "imageUrl": candidate_doc.get("imageUrl", ""),
+        "updatedAt": candidate_doc.get("updatedAt"),
+    }
 
 
 @app.get("/health")
@@ -109,6 +122,82 @@ def get_user(username: str) -> tuple:
 
     user["id"] = str(user.pop("_id"))
     return jsonify(user), 200
+
+
+@app.get("/candidates")
+def list_candidates() -> tuple:
+    candidate_rows = candidates.find().sort("updatedAt", -1)
+    return jsonify([normalize_candidate(doc) for doc in candidate_rows]), 200
+
+
+@app.post("/candidates")
+def create_candidate() -> tuple:
+    payload = request.get_json(silent=True) or {}
+    name = (payload.get("name") or "").strip()
+    party = (payload.get("party") or "").strip()
+    image_url = (payload.get("imageUrl") or "").strip()
+
+    if not name or not party or not image_url:
+        return jsonify({"error": "name, party, and imageUrl are required"}), 400
+
+    candidate_doc = {
+        "name": name,
+        "party": party,
+        "imageUrl": image_url,
+        "updatedAt": datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        result = candidates.insert_one(candidate_doc)
+    except PyMongoError:
+        return jsonify({"error": "failed to add candidate"}), 500
+
+    candidate_doc["_id"] = result.inserted_id
+    return jsonify(normalize_candidate(candidate_doc)), 201
+
+
+@app.put("/candidates/<candidate_id>")
+def update_candidate(candidate_id: str) -> tuple:
+    payload = request.get_json(silent=True) or {}
+    update_fields = {}
+
+    for field in ("name", "party", "imageUrl"):
+        if field in payload:
+            value = (payload.get(field) or "").strip()
+            if not value:
+                return jsonify({"error": f"{field} cannot be empty"}), 400
+            update_fields[field] = value
+
+    if not update_fields:
+        return jsonify({"error": "at least one field is required"}), 400
+
+    update_fields["updatedAt"] = datetime.now(timezone.utc).isoformat()
+
+    try:
+        object_id = ObjectId(candidate_id)
+    except Exception:
+        return jsonify({"error": "invalid candidate id"}), 400
+
+    result = candidates.update_one({"_id": object_id}, {"$set": update_fields})
+    if result.matched_count == 0:
+        return jsonify({"error": "candidate not found"}), 404
+
+    updated = candidates.find_one({"_id": object_id})
+    return jsonify(normalize_candidate(updated)), 200
+
+
+@app.delete("/candidates/<candidate_id>")
+def delete_candidate(candidate_id: str) -> tuple:
+    try:
+        object_id = ObjectId(candidate_id)
+    except Exception:
+        return jsonify({"error": "invalid candidate id"}), 400
+
+    result = candidates.delete_one({"_id": object_id})
+    if result.deleted_count == 0:
+        return jsonify({"error": "candidate not found"}), 404
+
+    return jsonify({"message": "candidate deleted"}), 200
 
 
 if __name__ == "__main__":

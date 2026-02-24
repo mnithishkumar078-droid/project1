@@ -12,20 +12,16 @@
         <ul class="nav-menu">
             <li><a href="index.html">Home</a></li>
             <li><a href="about.html">About</a></li>
-            <!-- Elections and Candidates pages removed -->
             <li><a href="votenow.html" class="active">VoteNow</a></li>
+            <li><a href="admin.html">Admin</a></li>
         </ul>
     </nav>
 
     <main>
         <section class="voting-section">
-            <h1>Cast Your Vote</h1>
-            <div id="votingStatus" class="voting-status">
-                <!-- Voting status will be shown here -->
-            </div>
-            <div id="votingForm" class="voting-form" style="display: none;">
-                <!-- Voting form will be loaded here -->
-            </div>
+            <h1>Choose Your Candidate</h1>
+            <p class="voting-note">Candidates shown below are loaded from MongoDB and update instantly after admin changes.</p>
+            <div id="candidateList" class="candidate-grid"></div>
         </section>
     </main>
 
