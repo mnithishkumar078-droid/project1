@@ -1,4 +1,11 @@
 const loginForm = document.getElementById('loginForm');
+const loginMessage = document.getElementById('loginMessage');
+
+function setMessage(message, type = 'error') {
+    if (!loginMessage) return;
+    loginMessage.textContent = message;
+    loginMessage.className = `message-box show ${type}`;
+}
 
 if (loginForm) {
     loginForm.addEventListener('submit', async function (e) {
@@ -16,21 +23,21 @@ if (loginForm) {
 
             const result = await response.json();
             if (!response.ok) {
-                alert(result.error || 'Invalid username or password!');
+                setMessage(result.error || 'Invalid username or password!');
                 return;
             }
 
             if (result.user?.role === 'admin') {
-                alert('This is voter login. Please use the Admin Login page.');
+                setMessage('This is voter login. Please use the Admin Login page.');
                 window.location.href = 'admin-login.html';
                 return;
             }
 
             localStorage.setItem('currentUser', JSON.stringify(result.user));
-            alert('Login successful! Redirecting to Vote Now page...');
+            setMessage('Login successful. Redirecting to Vote Now page...', 'success');
             window.location.href = 'votenow.html';
         } catch (error) {
-            alert('Unable to login right now. Please try again later.');
+            setMessage('Unable to login right now. Please try again later.');
             console.error(error);
         }
     });

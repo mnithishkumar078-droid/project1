@@ -16,6 +16,10 @@
         .btn { width:100%; padding:12px; background:#667eea; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer }
         .links { margin-top:12px; text-align:center }
         .links a { color:#667eea; text-decoration:none; font-weight:600 }
+        .message-box { margin-top:12px; padding:10px; border-radius:8px; font-weight:600; display:none; }
+        .message-box.show { display:block; }
+        .message-box.error { background:#ffe5e5; color:#b42318; }
+        .message-box.success { background:#e7f8ec; color:#067647; }
     </style>
 </head>
 <body>
@@ -32,6 +36,7 @@
             </div>
             <button class="btn" type="submit">Login as Voter</button>
         </form>
+        <div id="loginMessage" class="message-box"></div>
         <div class="links">
             <p>Admin? <a href="admin-login.html">Go to Admin Login</a></p>
             <p>Don't have an account? <a href="register.html">Register</a></p>

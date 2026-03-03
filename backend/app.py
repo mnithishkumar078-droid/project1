@@ -77,6 +77,7 @@ MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
 MONGO_DB = os.getenv('MONGO_DB', 'online_voting')
 USERS_COLLECTION = os.getenv('USERS_COLLECTION', 'users')
 CANDIDATES_COLLECTION = os.getenv('CANDIDATES_COLLECTION', 'candidates')
+VOTES_COLLECTION = os.getenv('VOTES_COLLECTION', 'votes')
 
 
 app = Flask(__name__)
@@ -89,12 +90,15 @@ try:
     db = client[MONGO_DB]
     users = db[USERS_COLLECTION]
     candidates = db[CANDIDATES_COLLECTION]
+    votes = db[VOTES_COLLECTION]
 except Exception:
     mongo_enabled = False
     users = InMemoryCollection()
     candidates = InMemoryCollection()
+    votes = InMemoryCollection()
 
 users.create_index('username', unique=True)
+votes.create_index('voterUsername', unique=True)
 
 
 def ensure_default_admin() -> None:
@@ -124,7 +128,7 @@ def normalize_candidate(candidate_doc: dict) -> dict:
         'id': str(candidate_doc['_id']),
         'name': candidate_doc.get('name', ''),
         'party': candidate_doc.get('party', ''),
-        'imageUrl': candidate_doc.get('imageUrl', ''),
+        'imageData': candidate_doc.get('imageData') or candidate_doc.get('imageUrl', ''),
         'updatedAt': candidate_doc.get('updatedAt'),
     }
 
@@ -250,15 +254,15 @@ def create_candidate() -> tuple:
     payload = request.get_json(silent=True) or {}
     name = (payload.get('name') or '').strip()
     party = (payload.get('party') or '').strip()
-    image_url = (payload.get('imageUrl') or '').strip()
+    image_data = (payload.get('imageData') or '').strip()
 
-    if not name or not party or not image_url:
-        return jsonify({'error': 'name, party, and imageUrl are required'}), 400
+    if not name or not party or not image_data:
+        return jsonify({'error': 'name, party, and imageData are required'}), 400
 
     candidate_doc = {
         'name': name,
         'party': party,
-        'imageUrl': image_url,
+        'imageData': image_data,
         'updatedAt': datetime.now(timezone.utc).isoformat(),
     }
 
@@ -276,7 +280,7 @@ def update_candidate(candidate_id: str) -> tuple:
     payload = request.get_json(silent=True) or {}
     update_fields = {}
 
-    for field in ('name', 'party', 'imageUrl'):
+    for field in ('name', 'party', 'imageData'):
         if field in payload:
             value = (payload.get(field) or '').strip()
             if not value:
@@ -299,6 +303,72 @@ def update_candidate(candidate_id: str) -> tuple:
 
     updated = candidates.find_one({'_id': object_id})
     return jsonify(normalize_candidate(updated)), 200
+
+
+@app.post('/votes')
+def cast_vote() -> tuple:
+    if not mongo_enabled:
+        return jsonify({'error': 'MongoDB is unavailable. Voting requires database storage.'}), 503
+
+    payload = request.get_json(silent=True) or {}
+    voter_username = (payload.get('voterUsername') or '').strip().lower()
+    candidate_id = (payload.get('candidateId') or '').strip()
+
+    if not voter_username or not candidate_id:
+        return jsonify({'error': 'voterUsername and candidateId are required'}), 400
+
+    voter = users.find_one({'username': voter_username})
+    if not voter or voter.get('role') != 'voter':
+        return jsonify({'error': 'voter not found'}), 404
+
+    try:
+        candidate_object_id = ObjectId(candidate_id)
+    except Exception:
+        return jsonify({'error': 'invalid candidate id'}), 400
+
+    candidate = candidates.find_one({'_id': candidate_object_id})
+    if not candidate:
+        return jsonify({'error': 'candidate not found'}), 404
+
+    previous_vote = votes.find_one({'voterUsername': voter_username})
+    vote_doc = {
+        'voterUsername': voter_username,
+        'candidateId': candidate_object_id,
+        'candidateName': candidate.get('name', ''),
+        'party': candidate.get('party', ''),
+        'votedAt': datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        if previous_vote:
+            votes.update_one({'_id': previous_vote['_id']}, {'$set': vote_doc})
+            return jsonify({'message': 'vote updated successfully'}), 200
+        votes.insert_one(vote_doc)
+    except PyMongoError:
+        return jsonify({'error': 'failed to save vote'}), 500
+
+    return jsonify({'message': 'vote cast successfully'}), 201
+
+
+@app.get('/votes/<username>')
+def get_vote(username: str) -> tuple:
+    normalized_username = username.strip().lower()
+    vote = votes.find_one({'voterUsername': normalized_username})
+    if not vote:
+        return jsonify({'hasVoted': False}), 200
+
+    return (
+        jsonify(
+            {
+                'hasVoted': True,
+                'candidateId': str(vote.get('candidateId', '')),
+                'candidateName': vote.get('candidateName', ''),
+                'party': vote.get('party', ''),
+                'votedAt': vote.get('votedAt', ''),
+            }
+        ),
+        200,
+    )
 
 
 @app.delete('/candidates/<candidate_id>')
