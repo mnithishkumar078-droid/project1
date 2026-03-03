@@ -1,3 +1,16 @@
+function setupLogoutButton() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (!logoutBtn) {
+        return;
+    }
+
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('currentUser');
+        alert('You have been logged out successfully.');
+        window.location.href = 'login.html';
+    });
+}
+
 async function loadCandidates() {
     const candidateList = document.getElementById('candidateList');
     candidateList.innerHTML = '<p class="loading-state">Loading candidates...</p>';
@@ -33,4 +46,5 @@ async function loadCandidates() {
     }
 }
 
+setupLogoutButton();
 loadCandidates();

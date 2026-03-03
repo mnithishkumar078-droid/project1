@@ -5,6 +5,9 @@ if (adminQuickLoginBtn) {
     adminQuickLoginBtn.addEventListener('click', () => {
         document.getElementById('username').value = 'admin';
         document.getElementById('password').value = 'admin@123';
+        if (loginForm) {
+            loginForm.requestSubmit();
+        }
     });
 }
 
