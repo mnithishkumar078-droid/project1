@@ -1,3 +1,33 @@
+function setupUserHeader() {
+    const storedUser = localStorage.getItem('currentUser');
+    if (!storedUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    let user;
+    try {
+        user = JSON.parse(storedUser);
+    } catch (error) {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const fullNameDisplay = document.getElementById('fullNameDisplay');
+    if (fullNameDisplay) {
+        fullNameDisplay.innerHTML = `<i class="fas fa-user"></i> ${user.fullName || user.username || 'Voter'}`;
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+    }
+}
+
 async function loadCandidates() {
     const candidateList = document.getElementById('candidateList');
     candidateList.innerHTML = '<p class="loading-state">Loading candidates...</p>';
@@ -33,4 +63,5 @@ async function loadCandidates() {
     }
 }
 
+setupUserHeader();
 loadCandidates();
