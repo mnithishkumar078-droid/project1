@@ -4,17 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vote Now - Online Voting System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="votenow-page">
     <nav class="navbar">
-        <div class="nav-brand">OnlineVoting</div>
+        <div class="logo">
+            <i class="fas fa-check-circle"></i> OnlineVoting
+        </div>
         <ul class="nav-menu">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About</a></li>
-            <li><a href="votenow.html" class="active">VoteNow</a></li>
-            <li><a href="admin-login.html">Admin</a></li>
+            <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="about.html"><i class="fas fa-info-circle"></i> About</a></li>
+            <li><a href="votenow.html" class="active vote-now-btn"><i class="fas fa-vote-yea"></i> Vote Now</a></li>
         </ul>
+        <div class="user-actions">
+            <span id="fullNameDisplay" class="full-name-display"><i class="fas fa-user"></i> Voter</span>
+            <button id="logoutBtn" class="logout-btn" type="button"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </div>
     </nav>
 
     <main>
