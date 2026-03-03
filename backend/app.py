@@ -245,15 +245,34 @@ def login() -> tuple:
 
 @app.post('/admin/login')
 def admin_login() -> tuple:
-    response, status_code = _authenticate_user()
-    if status_code != 200:
-        return response, status_code
+    payload = request.get_json(silent=True) or {}
+    username = (payload.get('username') or '').strip().lower()
+    password = payload.get('password') or ''
 
-    user = response.get_json().get('user', {})
+    if not username or not password:
+        return jsonify({'error': 'username and password are required'}), 400
+
+    user = users.find_one({'username': username})
+    if not user or not check_password_hash(user['passwordHash'], password):
+        return jsonify({'error': 'invalid credentials'}), 401
+
     if user.get('role') != 'admin':
         return jsonify({'error': 'admin access required'}), 403
 
-    return response, 200
+    return (
+        jsonify(
+            {
+                'message': 'login successful',
+                'user': {
+                    'id': str(user['_id']),
+                    'fullName': user['fullName'],
+                    'username': user['username'],
+                    'role': user.get('role', 'voter'),
+                },
+            }
+        ),
+        200,
+    )
 
 
 @app.get('/users/<username>')
@@ -395,9 +414,9 @@ def update_election_status() -> tuple:
 
 @app.get('/admin/analytics')
 def admin_analytics() -> tuple:
-    all_candidates = candidates.find()
-    all_votes = votes.find()
-    all_users = users.find()
+    all_candidates = list(candidates.find())
+    all_votes = list(votes.find())
+    all_users = list(users.find())
 
     voter_count = sum(1 for user in all_users if user.get('role') == 'voter')
     total_votes = len(all_votes)
