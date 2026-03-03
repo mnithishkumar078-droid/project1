@@ -52,6 +52,18 @@ body {
     background: rgba(102, 126, 234, 0.1);
 }
 
+.admin-nav-link {
+    background: #ea580c;
+    color: #fff !important;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+    background: #c2410c !important;
+    color: #fff !important;
+}
+
+
 .nav-logout-btn {
     border: none;
     background: #ef4444;

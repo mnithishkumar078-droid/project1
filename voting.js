@@ -1,3 +1,17 @@
+
+function setupAdminButton() {
+    const adminNavLink = document.getElementById('adminNavLink');
+    if (!adminNavLink) {
+        return;
+    }
+
+    const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    const isAdmin = currentUser && (currentUser.username === 'admin' || currentUser.role === 'admin');
+
+    adminNavLink.textContent = isAdmin ? 'Admin Dashboard' : 'Admin Login';
+    adminNavLink.href = isAdmin ? 'admin-dashboard.html' : 'admin.html';
+}
+
 function setupLogoutButton() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (!logoutBtn) {
@@ -46,5 +60,6 @@ async function loadCandidates() {
     }
 }
 
+setupAdminButton();
 setupLogoutButton();
 loadCandidates();
