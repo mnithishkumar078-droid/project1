@@ -53,8 +53,9 @@ class InMemoryCollection:
         self.docs.append(saved)
         return InsertResult(saved['_id'])
 
-    def find(self):
-        return [dict(doc) for doc in self.docs]
+    def find(self, query=None):
+        query = query or {}
+        return [dict(doc) for doc in self.docs if self._matches(doc, query)]
 
     def update_one(self, query, update):
         for idx, doc in enumerate(self.docs):
@@ -70,6 +71,12 @@ class InMemoryCollection:
                 return DeleteResult(1)
         return DeleteResult(0)
 
+    def delete_many(self, query):
+        query = query or {}
+        original_count = len(self.docs)
+        self.docs = [doc for doc in self.docs if not self._matches(doc, query)]
+        return DeleteResult(original_count - len(self.docs))
+
 
 load_dotenv()
 
@@ -78,6 +85,7 @@ MONGO_DB = os.getenv('MONGO_DB', 'online_voting')
 USERS_COLLECTION = os.getenv('USERS_COLLECTION', 'users')
 CANDIDATES_COLLECTION = os.getenv('CANDIDATES_COLLECTION', 'candidates')
 VOTES_COLLECTION = os.getenv('VOTES_COLLECTION', 'votes')
+SETTINGS_COLLECTION = os.getenv('SETTINGS_COLLECTION', 'settings')
 
 
 app = Flask(__name__)
@@ -91,14 +99,17 @@ try:
     users = db[USERS_COLLECTION]
     candidates = db[CANDIDATES_COLLECTION]
     votes = db[VOTES_COLLECTION]
+    settings = db[SETTINGS_COLLECTION]
 except Exception:
     mongo_enabled = False
     users = InMemoryCollection()
     candidates = InMemoryCollection()
     votes = InMemoryCollection()
+    settings = InMemoryCollection()
 
 users.create_index('username', unique=True)
 votes.create_index('voterUsername', unique=True)
+settings.create_index('key', unique=True)
 
 
 def ensure_default_admin() -> None:
@@ -121,6 +132,30 @@ def ensure_default_admin() -> None:
 
 
 ensure_default_admin()
+
+
+def ensure_default_settings() -> None:
+    existing = settings.find_one({'key': 'election_status'})
+    if existing:
+        return
+
+    settings.insert_one(
+        {
+            'key': 'election_status',
+            'isOpen': True,
+            'updatedAt': datetime.now(timezone.utc).isoformat(),
+        }
+    )
+
+
+ensure_default_settings()
+
+
+def get_election_status() -> bool:
+    status_doc = settings.find_one({'key': 'election_status'})
+    if not status_doc:
+        return True
+    return bool(status_doc.get('isOpen', True))
 
 
 def normalize_candidate(candidate_doc: dict) -> dict:
@@ -310,6 +345,9 @@ def cast_vote() -> tuple:
     if not mongo_enabled:
         return jsonify({'error': 'MongoDB is unavailable. Voting requires database storage.'}), 503
 
+    if not get_election_status():
+        return jsonify({'error': 'Election is currently closed by admin.'}), 403
+
     payload = request.get_json(silent=True) or {}
     voter_username = (payload.get('voterUsername') or '').strip().lower()
     candidate_id = (payload.get('candidateId') or '').strip()
@@ -348,6 +386,77 @@ def cast_vote() -> tuple:
         return jsonify({'error': 'failed to save vote'}), 500
 
     return jsonify({'message': 'vote cast successfully'}), 201
+
+
+@app.get('/admin/election/status')
+def election_status() -> tuple:
+    return jsonify({'isOpen': get_election_status()}), 200
+
+
+@app.post('/admin/election/status')
+def update_election_status() -> tuple:
+    payload = request.get_json(silent=True) or {}
+    if 'isOpen' not in payload:
+        return jsonify({'error': 'isOpen is required'}), 400
+
+    is_open = bool(payload.get('isOpen'))
+    settings.update_one(
+        {'key': 'election_status'},
+        {'$set': {'isOpen': is_open, 'updatedAt': datetime.now(timezone.utc).isoformat()}},
+    )
+    return jsonify({'message': f"Election {'opened' if is_open else 'closed'} successfully", 'isOpen': is_open}), 200
+
+
+@app.get('/admin/analytics')
+def admin_analytics() -> tuple:
+    all_candidates = candidates.find()
+    all_votes = votes.find()
+    all_users = users.find()
+
+    voter_count = sum(1 for user in all_users if user.get('role') == 'voter')
+    total_votes = len(all_votes)
+
+    vote_count_by_candidate = {}
+    for vote in all_votes:
+        candidate_key = str(vote.get('candidateId', ''))
+        vote_count_by_candidate[candidate_key] = vote_count_by_candidate.get(candidate_key, 0) + 1
+
+    candidate_breakdown = []
+    for candidate in all_candidates:
+        candidate_id = str(candidate.get('_id', ''))
+        total = vote_count_by_candidate.get(candidate_id, 0)
+        candidate_breakdown.append(
+            {
+                'id': candidate_id,
+                'name': candidate.get('name', ''),
+                'party': candidate.get('party', ''),
+                'totalVotes': total,
+            }
+        )
+
+    sorted_breakdown = sorted(candidate_breakdown, key=lambda row: row['totalVotes'], reverse=True)
+    leading_candidate = sorted_breakdown[0] if sorted_breakdown and sorted_breakdown[0]['totalVotes'] > 0 else None
+    turnout = round((total_votes / voter_count) * 100, 2) if voter_count else 0
+
+    return (
+        jsonify(
+            {
+                'totalVoters': voter_count,
+                'totalVotes': total_votes,
+                'turnoutPercent': turnout,
+                'isElectionOpen': get_election_status(),
+                'leadingCandidate': leading_candidate,
+                'candidateBreakdown': sorted_breakdown,
+            }
+        ),
+        200,
+    )
+
+
+@app.post('/admin/reset-votes')
+def reset_votes() -> tuple:
+    result = votes.delete_many({})
+    return jsonify({'message': 'All votes reset successfully', 'deletedCount': result.deleted_count}), 200
 
 
 @app.get('/votes/<username>')

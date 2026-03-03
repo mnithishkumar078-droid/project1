@@ -3,251 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us - Online Voting System</title>
+    <title>About Us - OnlineVoting</title>
     <link rel="icon" type="image/png" href="logo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); min-height: 100vh; }
+        .navbar { background: white; padding: 15px 50px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 20px rgba(0,0,0,0.1); }
+        .logo { font-size: 28px; font-weight: 700; color: #1e3c72; }
+        .logo i { color: #2a5298; margin-right: 10px; }
+        .nav-menu { display: flex; list-style: none; gap: 30px; }
+        .nav-menu li a { text-decoration: none; color: #333; font-weight: 500; font-size: 16px; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
+        .nav-menu li a:hover, .nav-menu li a.active { color: #2a5298; }
+        .vote-now-btn { background: #e74c3c; color: white !important; padding: 10px 20px; border-radius: 50px; }
+        .vote-now-btn:hover { background: #c0392b; }
 
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
+        .hero { display: flex; justify-content: space-between; align-items: center; padding: 60px 80px; color: white; max-width: 1400px; margin: 0 auto; }
+        .hero-content { flex: 1; }
+        .hero-content h1 { font-size: 52px; margin-bottom: 20px; line-height: 1.2; }
+        .hero-content h1 span { color: #f1c40f; display: block; }
+        .hero-content p { font-size: 20px; margin-bottom: 20px; opacity: 0.95; line-height: 1.6; }
+        .hero-image { flex: 1; text-align: right; }
+        .hero-image i { font-size: 220px; color: rgba(255,255,255,0.15); }
 
-        .navbar {
-            background: white;
-            padding: 15px 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
-        }
+        .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; padding: 60px 80px; background: white; max-width: 1400px; margin: 40px auto; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .feature-card { text-align: center; padding: 30px 20px; }
+        .feature-card i { font-size: 48px; color: #2a5298; margin-bottom: 20px; }
+        .feature-card h3 { font-size: 24px; margin-bottom: 15px; color: #333; }
+        .feature-card p { color: #666; line-height: 1.6; }
 
-        .logo {
-            font-size: 28px;
-            font-weight: 700;
-            color: #667eea;
-        }
+        .about-story { max-width: 1400px; margin: 0 auto 40px; background: #ffffff; border-radius: 20px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .about-story h2 { color: #1e3c72; margin-bottom: 16px; }
+        .about-story p { color: #4b5563; line-height: 1.8; }
 
-        .logo i {
-            color: #764ba2;
-            margin-right: 10px;
-        }
-
-        .nav-menu {
-            display: flex;
-            list-style: none;
-            gap: 30px;
-        }
-
-        .nav-menu li a {
-            text-decoration: none;
-            color: #333;
-            font-weight: 500;
-            font-size: 16px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-menu li a:hover, .nav-menu li a.active {
-            color: #667eea;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .about-card {
-            background: white;
-            border-radius: 20px;
-            padding: 50px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .about-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .about-header i {
-            font-size: 60px;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .about-header h1 {
-            color: #333;
-            font-size: 42px;
-            margin-bottom: 10px;
-        }
-
-        .about-header p {
-            color: #666;
-            font-size: 18px;
-        }
-
-        .about-content h2 {
-            color: #333;
-            font-size: 28px;
-            margin: 30px 0 20px;
-        }
-
-        .about-content p {
-            color: #666;
-            line-height: 1.8;
-            margin-bottom: 20px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            margin: 40px 0;
-        }
-
-        .feature-item {
-            text-align: center;
-            padding: 30px;
-            background: #f8f9ff;
-            border-radius: 15px;
-        }
-
-        .feature-item i {
-            font-size: 40px;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .feature-item h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .feature-item p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .team-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .team-member {
-            text-align: center;
-        }
-
-        .team-member img {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 5px solid #667eea20;
-        }
-
-        .team-member h4 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .team-member p {
-            color: #666;
-        }
-
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                padding: 20px;
-            }
-            .nav-menu {
-                margin-top: 20px;
-            }
-            .features-grid, .team-grid {
-                grid-template-columns: 1fr;
-            }
-            .about-card {
-                padding: 30px;
-            }
+        @media (max-width: 900px) {
+            .navbar { flex-direction: column; gap: 16px; padding: 20px; }
+            .hero { flex-direction: column; padding: 30px 20px; text-align: center; }
+            .hero-image { text-align: center; margin-top: 20px; }
+            .hero-image i { font-size: 120px; }
+            .features { grid-template-columns: 1fr; padding: 30px 20px; margin: 20px; }
+            .about-story { margin: 20px; padding: 24px; }
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">
-            <i class="fas fa-check-circle"></i> OnlineVoting
-        </div>
+        <div class="logo"><i class="fas fa-vote-yea"></i> OnlineVoting</div>
         <ul class="nav-menu">
             <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
             <li><a href="about.html" class="active"><i class="fas fa-info-circle"></i> About</a></li>
-            <!-- Elections and Candidates pages removed -->
-            <li><a href="votenow.html" class="vote-now-btn"><i class="fas fa-vote-yea"></i> Vote Now</a></li>
+            <li><a href="votenow.html" class="vote-now-btn"><i class="fas fa-check-to-slot"></i> Vote Now</a></li>
         </ul>
     </nav>
 
-    <div class="container">
-        <div class="about-card">
-            <div class="about-header">
-                <i class="fas fa-vote-yea"></i>
-                <h1>About OnlineVoting</h1>
-                <p>Empowering Democracy Through Technology</p>
-            </div>
-
-            <div class="about-content">
-                <h2>Our Mission</h2>
-                <p>OnlineVoting is dedicated to making the democratic process more accessible, secure, and transparent. We believe that every citizen should have the opportunity to participate in elections conveniently from anywhere in the world, while maintaining the highest standards of security and integrity.</p>
-
-                <div class="features-grid">
-                    <div class="feature-item">
-                        <i class="fas fa-shield-alt"></i>
-                        <h3>Secure & Encrypted</h3>
-                        <p>Bank-grade encryption ensures your vote remains confidential</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-globe"></i>
-                        <h3>Global Access</h3>
-                        <p>Vote from anywhere, anytime, on any device</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-id-card"></i>
-                        <h3>Aadhaar Verified</h3>
-                        <p>Secure identity verification using Aadhaar e-KYC</p>
-                    </div>
-                </div>
-
-                <h2>How It Works</h2>
-                <p>Our platform uses Aadhaar e-KYC for voter verification, ensuring that each eligible citizen can vote only once. The entire process is transparent and auditable, with real-time result counting and publication.</p>
-
-                <h2>Our Team</h2>
-                <div class="team-grid">
-                    <div class="team-member">
-                        <img src="https://via.placeholder.com/150" alt="Team Member">
-                        <h4>John Doe</h4>
-                        <p>Founder & CEO</p>
-                    </div>
-                    <div class="team-member">
-                        <img src="https://via.placeholder.com/150" alt="Team Member">
-                        <h4>Jane Smith</h4>
-                        <p>CTO</p>
-                    </div>
-                    <div class="team-member">
-                        <img src="https://via.placeholder.com/150" alt="Team Member">
-                        <h4>Mike Johnson</h4>
-                        <p>Security Lead</p>
-                    </div>
-                </div>
-            </div>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>About <span>OnlineVoting</span></h1>
+            <p>We are building a secure, easy and transparent voting platform where citizens can vote confidently and administrators can monitor election integrity in real time.</p>
+            <p>Our mission is to combine accessibility, privacy and trust in one modern digital election system.</p>
         </div>
-    </div>
+        <div class="hero-image">
+            <i class="fas fa-landmark"></i>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <i class="fas fa-shield-halved"></i>
+            <h3>Secure by Design</h3>
+            <p>Identity-aware logins, one-person-one-vote validation and tamper-resistant vote tracking.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-chart-line"></i>
+            <h3>Live Election Insights</h3>
+            <p>Admins can monitor turnout, leading candidates and vote distribution in real time.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-users"></i>
+            <h3>Accessible to All</h3>
+            <p>Simple user flows for voters and clear dashboards for election officers and admins.</p>
+        </div>
+    </section>
+
+    <section class="about-story">
+        <h2>How this system helps democracy</h2>
+        <p>OnlineVoting reduces manual errors and improves trust by keeping all records structured and auditable. Voters can cast or update their vote while elections are open, and administrators can manage candidates, control election state, and review analytics quickly. This keeps the process transparent, fast, and easier to operate at scale.</p>
+    </section>
 </body>
 </html>
