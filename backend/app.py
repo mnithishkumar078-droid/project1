@@ -178,14 +178,6 @@ def home() -> tuple:
     return send_from_directory(FRONTEND_DIR, 'index.html')
 
 
-@app.get('/<path:asset_path>')
-def static_assets(asset_path: str) -> tuple:
-    asset = FRONTEND_DIR / asset_path
-    if asset.is_file():
-        return send_from_directory(FRONTEND_DIR, asset_path)
-    return jsonify({'error': 'not found'}), 404
-
-
 @app.post('/register')
 def register() -> tuple:
     payload = request.get_json(silent=True) or {}
@@ -486,6 +478,14 @@ def delete_candidate(candidate_id: str) -> tuple:
         return jsonify({'error': 'candidate not found'}), 404
 
     return jsonify({'message': 'candidate deleted'}), 200
+
+
+@app.get('/<path:asset_path>')
+def static_assets(asset_path: str) -> tuple:
+    asset = FRONTEND_DIR / asset_path
+    if asset.is_file():
+        return send_from_directory(FRONTEND_DIR, asset_path)
+    return jsonify({'error': 'not found'}), 404
 
 
 if __name__ == '__main__':
