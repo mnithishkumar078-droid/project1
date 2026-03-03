@@ -149,6 +149,9 @@ def static_assets(asset_path: str) -> tuple:
 
 @app.post('/register')
 def register() -> tuple:
+    if not mongo_enabled:
+        return jsonify({'error': 'MongoDB is unavailable. Registration requires database storage.'}), 503
+
     payload = request.get_json(silent=True) or {}
     full_name = (payload.get('fullName') or '').strip()
     username = (payload.get('username') or '').strip().lower()
