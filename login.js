@@ -30,7 +30,7 @@ if (loginForm) {
                 localStorage.setItem('currentUser', JSON.stringify(result.user));
                 const isAdmin = result.user?.username === 'admin' || result.user?.role === 'admin';
                 alert(`Login successful! Redirecting to ${isAdmin ? 'Admin' : 'Vote Now'} page...`);
-                window.location.href = isAdmin ? 'admin.html' : 'votenow.html';
+                window.location.href = isAdmin ? 'admin-dashboard.html' : 'votenow.html';
                 return;
             }
         } catch (error) {
@@ -41,10 +41,10 @@ if (loginForm) {
         const user = users.find((u) => u.username === username && u.password === password);
 
         if (user) {
-            if (user.username === 'admin' && user.password === 'admin@123') {
+            if (user.username === 'admin' && (user.password === 'admin@123' || user.password === 'password')) {
                 localStorage.setItem('currentUser', JSON.stringify({ ...user, role: 'admin' }));
                 alert('Admin login successful! Redirecting to Admin page...');
-                window.location.href = 'admin.html';
+                window.location.href = 'admin-dashboard.html';
                 return;
             }
 

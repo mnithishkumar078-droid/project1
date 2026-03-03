@@ -9,6 +9,19 @@ const candidateForm = document.getElementById('candidateForm');
 const adminCandidateList = document.getElementById('adminCandidateList');
 const adminStatus = document.getElementById('adminStatus');
 
+function setupLogoutButton() {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (!logoutBtn) {
+        return;
+    }
+
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('currentUser');
+        alert('You have been logged out successfully.');
+        window.location.href = 'login.html';
+    });
+}
+
 function setStatus(message, type = 'success') {
     adminStatus.className = `admin-status ${type}`;
     adminStatus.textContent = message;
@@ -119,4 +132,5 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     setStatus('Form reset.');
 });
 
+setupLogoutButton();
 loadAdminCandidates();

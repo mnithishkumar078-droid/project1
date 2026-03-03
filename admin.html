@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Online Voting System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg,#1f2937 0%,#111827 100%); min-height:100vh; display:flex; align-items:center; justify-content:center; }
+        .card { background:#fff; padding:30px; border-radius:12px; width:100%; max-width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+        h2 { margin-bottom:20px; color:#111827 }
+        .form-group { margin-bottom:15px }
+        label { display:block; margin-bottom:6px; color:#374151; font-weight:600 }
+        input { width:100%; padding:12px 14px; border-radius:8px; border:1px solid #d1d5db }
+        .btn { width:100%; padding:12px; background:#111827; color:#fff; border:none; border-radius:8px; font-weight:700; cursor:pointer }
+        .links { margin-top:12px; text-align:center }
+        .links a { color:#111827; text-decoration:none; font-weight:600 }
+        .hint { margin-top:10px; color:#4b5563; font-size:14px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2><i class="fas fa-user-shield"></i> Admin Login</h2>
+        <form id="adminLoginForm">
+            <div class="form-group">
+                <label for="adminUsername">Username</label>
+                <input id="adminUsername" type="text" placeholder="Enter admin username" value="admin" required />
+            </div>
+            <div class="form-group">
+                <label for="adminPassword">Password</label>
+                <input id="adminPassword" type="password" placeholder="Enter admin password" required />
+            </div>
+            <button class="btn" type="submit">Login to Admin Dashboard</button>
+        </form>
+        <p class="hint">Use credentials: <strong>admin</strong> / <strong>password</strong></p>
+        <div class="links">
+            <p><a href="login.html">User Login</a></p>
+            <p><a href="index.html">Back to Home</a></p>
+        </div>
+    </div>
+
+    <script src="admin-login.js"></script>
+</body>
+</html>
