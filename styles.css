@@ -52,6 +52,20 @@ body {
     background: rgba(102, 126, 234, 0.1);
 }
 
+.nav-logout-btn {
+    border: none;
+    background: #ef4444;
+    color: #fff;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.nav-logout-btn:hover {
+    background: #dc2626;
+}
+
 /* Main Content */
 main {
     padding: 2rem 5%;

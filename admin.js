@@ -1,3 +1,10 @@
+const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+
+if (!currentUser || (currentUser.username !== 'admin' && currentUser.role !== 'admin')) {
+    alert('Please login with admin credentials to access this page.');
+    window.location.href = 'login.html';
+}
+
 const candidateForm = document.getElementById('candidateForm');
 const adminCandidateList = document.getElementById('adminCandidateList');
 const adminStatus = document.getElementById('adminStatus');
