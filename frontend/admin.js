@@ -1,6 +1,5 @@
 const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 if (currentUser.role !== 'admin') {
-    alert('Admin access required.');
     window.location.href = 'admin-login.html';
 }
 
@@ -9,13 +8,14 @@ if (logoutBtn) {
     logoutBtn.addEventListener('click', (event) => {
         event.preventDefault();
         localStorage.removeItem('currentUser');
-        window.location.href = 'admin-login.html';
+        window.location.href = 'index.html';
     });
 }
 
 const candidateForm = document.getElementById('candidateForm');
 const adminCandidateList = document.getElementById('adminCandidateList');
 const adminStatus = document.getElementById('adminStatus');
+let selectedImageData = '';
 
 function setStatus(message, type = 'success') {
     adminStatus.className = `admin-status ${type}`;
@@ -27,6 +27,16 @@ function resetForm() {
     document.getElementById('candidateName').value = '';
     document.getElementById('candidateParty').value = '';
     document.getElementById('candidateImage').value = '';
+    selectedImageData = '';
+}
+
+async function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 async function fetchCandidates() {
@@ -47,12 +57,12 @@ function renderCandidates(candidates) {
         .map(
             (candidate) => `
             <article class="candidate-card">
-                <img src="${candidate.imageUrl}" alt="${candidate.name}" class="candidate-image" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'" />
+                <img src="${candidate.imageData}" alt="${candidate.name}" class="candidate-image" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'" />
                 <div class="candidate-info">
                     <h3>${candidate.name}</h3>
                     <p>${candidate.party}</p>
                     <div class="admin-actions">
-                        <button class="btn btn-primary" onclick="editCandidate('${candidate.id}', '${candidate.name.replace(/'/g, "\\'")}', '${candidate.party.replace(/'/g, "\\'")}', '${candidate.imageUrl.replace(/'/g, "\\'")}')">Edit</button>
+                        <button class="btn btn-primary" onclick="editCandidate('${candidate.id}', '${candidate.name.replace(/'/g, "\\'")}', '${candidate.party.replace(/'/g, "\\'")}')">Edit</button>
                         <button class="btn btn-secondary" onclick="removeCandidate('${candidate.id}')">Delete</button>
                     </div>
                 </div>
@@ -62,12 +72,13 @@ function renderCandidates(candidates) {
         .join('');
 }
 
-window.editCandidate = function (id, name, party, imageUrl) {
+window.editCandidate = function (id, name, party) {
     document.getElementById('candidateId').value = id;
     document.getElementById('candidateName').value = name;
     document.getElementById('candidateParty').value = party;
-    document.getElementById('candidateImage').value = imageUrl;
-    setStatus('Editing candidate. Update details and click Save Candidate.', 'success');
+    document.getElementById('candidateImage').value = '';
+    selectedImageData = '';
+    setStatus('Editing candidate. Upload a new image only if you want to replace the current one.', 'success');
 };
 
 window.removeCandidate = async function (id) {
@@ -93,15 +104,40 @@ async function loadAdminCandidates() {
     }
 }
 
+const candidateImageInput = document.getElementById('candidateImage');
+candidateImageInput.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+        selectedImageData = '';
+        return;
+    }
+
+    try {
+        selectedImageData = await fileToDataUrl(file);
+        setStatus('Image selected successfully.');
+    } catch (error) {
+        selectedImageData = '';
+        setStatus('Unable to read selected image file.', 'error');
+    }
+});
+
 candidateForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
     const id = document.getElementById('candidateId').value;
     const payload = {
         name: document.getElementById('candidateName').value.trim(),
-        party: document.getElementById('candidateParty').value.trim(),
-        imageUrl: document.getElementById('candidateImage').value.trim()
+        party: document.getElementById('candidateParty').value.trim()
     };
+
+    if (selectedImageData) {
+        payload.imageData = selectedImageData;
+    }
+
+    if (!id && !payload.imageData) {
+        setStatus('Please upload a candidate image.', 'error');
+        return;
+    }
 
     try {
         const response = await fetch(id ? `/candidates/${id}` : '/candidates', {
@@ -110,15 +146,16 @@ candidateForm.addEventListener('submit', async (event) => {
             body: JSON.stringify(payload)
         });
 
+        const result = await response.json();
         if (!response.ok) {
-            throw new Error('Save failed');
+            throw new Error(result.error || 'Save failed');
         }
 
         setStatus(id ? 'Candidate updated successfully.' : 'Candidate added successfully.');
         resetForm();
         await loadAdminCandidates();
     } catch (error) {
-        setStatus('Unable to save candidate. Check all fields and try again.', 'error');
+        setStatus(error.message || 'Unable to save candidate. Check all fields and try again.', 'error');
     }
 });
 

@@ -396,6 +396,7 @@
         </div>
         
         <form id="registerForm">
+            <div id="registerMessage" class="verification-status" style="display:none;"></div>
             <div class="form-group">
                 <label><i class="fas fa-user"></i> Full Name</label>
                 <div class="input-group">
@@ -602,6 +603,13 @@
 
         let parsedAadhaarData = null;
         let isEligible = false;
+
+        function showRegisterMessage(message, type = 'error') {
+            const messageBox = document.getElementById('registerMessage');
+            messageBox.style.display = 'block';
+            messageBox.textContent = message;
+            messageBox.className = `verification-status ${type}`;
+        }
         
         function togglePassword(fieldId) {
             const input = document.getElementById(fieldId);
@@ -725,23 +733,23 @@
             
             // Validate passwords match
             if (password !== confirmPassword) {
-                alert('Passwords do not match!');
+                showRegisterMessage('Passwords do not match!', 'error');
                 return;
             }
             
             // Validate password strength
             if (password.length < 6) {
-                alert('Password must be at least 6 characters long!');
+                showRegisterMessage('Password must be at least 6 characters long!', 'error');
                 return;
             }
             
             if (!parsedAadhaarData) {
-                alert('Please upload and verify your Aadhaar!');
+                showRegisterMessage('Please upload and verify your Aadhaar!', 'error');
                 return;
             }
             
             if (!isEligible) {
-                alert('Sorry, you must be 18 years or older to register.');
+                showRegisterMessage('Sorry, you must be 18 years or older to register.', 'error');
                 return;
             }
             
@@ -760,15 +768,15 @@
 
                 const result = await response.json();
                 if (!response.ok) {
-                    alert(result.error || 'Registration failed!');
+                    showRegisterMessage(result.error || 'Registration failed!', 'error');
                     return;
                 }
 
-                alert('Registration successful! You can now login with your username and password.');
+                showRegisterMessage('Registration successful! You can now login with your username and password.', 'success');
                 window.location.href = 'login.html';
             } catch (error) {
                 console.error(error);
-                alert('Unable to register right now. Please try again later.');
+                showRegisterMessage('Unable to register right now. Please try again later.', 'error');
             }
         });
         

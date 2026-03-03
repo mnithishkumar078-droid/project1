@@ -1,4 +1,11 @@
 const adminLoginForm = document.getElementById('adminLoginForm');
+const adminLoginMessage = document.getElementById('adminLoginMessage');
+
+function setAdminMessage(message, type = 'error') {
+    if (!adminLoginMessage) return;
+    adminLoginMessage.textContent = message;
+    adminLoginMessage.className = `message-box show ${type}`;
+}
 
 if (adminLoginForm) {
     adminLoginForm.addEventListener('submit', async (event) => {
@@ -16,15 +23,15 @@ if (adminLoginForm) {
 
             const result = await response.json();
             if (!response.ok) {
-                alert(result.error || 'Admin login failed.');
+                setAdminMessage(result.error || 'Admin login failed.');
                 return;
             }
 
             localStorage.setItem('currentUser', JSON.stringify(result.user));
-            alert('Admin login successful.');
+            setAdminMessage('Admin login successful.', 'success');
             window.location.href = 'admin.html';
         } catch (error) {
-            alert('Unable to login right now. Please try again later.');
+            setAdminMessage('Unable to login right now. Please try again later.');
             console.error(error);
         }
     });
