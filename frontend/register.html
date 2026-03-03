@@ -715,7 +715,7 @@
             }
         });
         
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const fullName = document.getElementById('fullName').value;
@@ -745,66 +745,38 @@
                 return;
             }
             
-            // Get existing users
-            const users = JSON.parse(localStorage.getItem('voters')) || [];
-            
-            // Check if username already exists
-            if (users.some(u => u.username === username)) {
-                alert('Username already taken!');
-                return;
-            }
-            
-            // Create new user
-            const newUser = {
-                fullName: fullName,
-                username: username,
-                password: password,
-                aadhaarVerified: true,
-                aadhaarData: {
-                    name: parsedAadhaarData.personal_details.name,
-                    dob: parsedAadhaarData.personal_details.dob,
-                    gender: parsedAadhaarData.personal_details.gender,
-                    reference_id: parsedAadhaarData.reference_id
-                },
-                registrationDate: new Date().toISOString(),
-                hasVoted: false
-            };
-            
-            // Save to localStorage
-            users.push(newUser);
-            localStorage.setItem('voters', JSON.stringify(users));
-            
-            // Store in MongoDB via API if available
-            fetch('/api/extract', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    type: 'registration',
-                    data: {
-                        username: username,
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
                         fullName: fullName,
-                        aadhaarRef: parsedAadhaarData.reference_id
-                    }
-                })
-            }).catch(err => console.log('MongoDB storage not available:', err));
-            
-            alert('Registration successful! You can now login with your username and password.');
-            window.location.href = 'login.html';
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    alert(result.error || 'Registration failed!');
+                    return;
+                }
+
+                alert('Registration successful! You can now login with your username and password.');
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error(error);
+                alert('Unable to register right now. Please try again later.');
+            }
         });
         
         // Check for duplicate username as user types
         document.getElementById('username').addEventListener('input', function() {
             const username = this.value;
             if (username.length >= 3) {
-                const users = JSON.parse(localStorage.getItem('voters')) || [];
-                if (users.some(u => u.username === username)) {
-                    this.setCustomValidity('Username already taken');
-                    this.reportValidity();
-                } else {
-                    this.setCustomValidity('');
-                }
+                this.setCustomValidity('');
             }
         });
     </script>
