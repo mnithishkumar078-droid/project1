@@ -153,6 +153,37 @@
             font-size: 14px;
             margin-bottom: 15px;
         }
+
+        .aadhaar-instructions {
+            margin: 0 0 15px;
+            padding: 12px 14px;
+            background: #fff;
+            border: 1px solid #d9e2ff;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #374151;
+        }
+
+        .aadhaar-instructions summary {
+            cursor: pointer;
+            font-weight: 600;
+            color: #3f51b5;
+            list-style: none;
+        }
+
+        .aadhaar-instructions summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .aadhaar-instructions ol {
+            margin: 10px 0 0 18px;
+            padding: 0;
+        }
+
+        .aadhaar-instructions li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
         
         .file-input {
             position: relative;
@@ -435,6 +466,16 @@
             <div class="aadhaar-section">
                 <h3><i class="fas fa-id-card"></i> Aadhaar e-KYC Verification (Age 18+ Required)</h3>
                 <p>Upload your Aadhaar offline e-KYC XML file for age verification</p>
+                <details class="aadhaar-instructions">
+                    <summary><i class="fas fa-circle-info"></i> How to download Aadhaar XML file</summary>
+                    <ol>
+                        <li>Visit UIDAI official portal: <strong>myAadhaar &gt; Download Aadhaar</strong>.</li>
+                        <li>Select <strong>"Aadhaar Number"</strong> or <strong>"VID"</strong>, enter captcha, and request OTP.</li>
+                        <li>Verify OTP and choose <strong>"Share Code"</strong> to generate the offline XML package.</li>
+                        <li>Download the ZIP, extract it, and upload the <strong>.xml</strong> file here.</li>
+                        <li>Keep the share code secure; do not share OTP or XML publicly.</li>
+                    </ol>
+                </details>
                 
                 <div class="file-input">
                     <input type="file" id="aadhaarFile" accept=".xml" onchange="handleFileUpload(this)" required>
@@ -604,6 +645,8 @@
 
         let parsedAadhaarData = null;
         let isEligible = false;
+        let lastHandledFileToken = '';
+        let lastHandledAt = 0;
 
         function showRegisterMessage(message, type = 'error') {
             const messageBox = document.getElementById('registerMessage');
@@ -638,6 +681,14 @@
             
             if (input.files && input.files[0]) {
                 const file = input.files[0];
+                const currentFileToken = `${file.name}-${file.size}-${file.lastModified}`;
+                const now = Date.now();
+                if (currentFileToken === lastHandledFileToken && now - lastHandledAt < 1200) {
+                    return;
+                }
+
+                lastHandledFileToken = currentFileToken;
+                lastHandledAt = now;
                 fileNameText.textContent = file.name;
                 fileNameDiv.classList.add('show');
                 
