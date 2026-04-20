@@ -1,8 +1,9 @@
 import os
+from json import JSONDecodeError
 from datetime import datetime, timezone
 from pathlib import Path
 
-from bson import ObjectId
+from bson import ObjectId, json_util
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 from pymongo import MongoClient
@@ -78,6 +79,53 @@ class InMemoryCollection:
         return DeleteResult(original_count - len(self.docs))
 
 
+class FileBackedCollection(InMemoryCollection):
+    def __init__(self, file_path: Path):
+        super().__init__()
+        self.file_path = file_path
+        self.file_path.parent.mkdir(parents=True, exist_ok=True)
+        self._load()
+
+    def _load(self):
+        if not self.file_path.exists():
+            self.docs = []
+            return
+
+        try:
+            raw_data = self.file_path.read_text(encoding='utf-8')
+            parsed = json_util.loads(raw_data)
+            self.docs = parsed if isinstance(parsed, list) else []
+        except (OSError, JSONDecodeError, TypeError, ValueError):
+            self.docs = []
+
+    def _save(self):
+        payload = json_util.dumps(self.docs)
+        self.file_path.write_text(payload, encoding='utf-8')
+
+    def insert_one(self, doc):
+        result = super().insert_one(doc)
+        self._save()
+        return result
+
+    def update_one(self, query, update):
+        result = super().update_one(query, update)
+        if result.matched_count:
+            self._save()
+        return result
+
+    def delete_one(self, query):
+        result = super().delete_one(query)
+        if result.deleted_count:
+            self._save()
+        return result
+
+    def delete_many(self, query):
+        result = super().delete_many(query)
+        if result.deleted_count:
+            self._save()
+        return result
+
+
 load_dotenv()
 
 MONGO_URI = os.getenv('MONGO_URI', 'mongodb://localhost:27017')
@@ -102,10 +150,11 @@ try:
     settings = db[SETTINGS_COLLECTION]
 except Exception:
     mongo_enabled = False
-    users = InMemoryCollection()
-    candidates = InMemoryCollection()
-    votes = InMemoryCollection()
-    settings = InMemoryCollection()
+    fallback_dir = Path(__file__).resolve().parent / 'data'
+    users = FileBackedCollection(fallback_dir / f'{USERS_COLLECTION}.json')
+    candidates = FileBackedCollection(fallback_dir / f'{CANDIDATES_COLLECTION}.json')
+    votes = FileBackedCollection(fallback_dir / f'{VOTES_COLLECTION}.json')
+    settings = FileBackedCollection(fallback_dir / f'{SETTINGS_COLLECTION}.json')
 
 users.create_index('username', unique=True)
 votes.create_index('voterUsername', unique=True)
@@ -170,7 +219,8 @@ def normalize_candidate(candidate_doc: dict) -> dict:
 
 @app.get('/health')
 def health() -> tuple:
-    return jsonify({'status': 'ok', 'database': MONGO_DB, 'storage': 'mongodb' if mongo_enabled else 'in-memory'}), 200
+    storage = 'mongodb' if mongo_enabled else 'file-backed'
+    return jsonify({'status': 'ok', 'database': MONGO_DB, 'storage': storage}), 200
 
 
 @app.get('/')
