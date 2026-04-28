@@ -16,6 +16,7 @@ if (loginForm) {
 
         try {
             const response = await fetch('/login', {
+                credentials: 'include',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })

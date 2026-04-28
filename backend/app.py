@@ -5,9 +5,9 @@ from pathlib import Path
 
 from bson import ObjectId, json_util
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, session
 from pymongo import MongoClient
-from pymongo.errors import PyMongoError
+from pymongo.errors import DuplicateKeyError, PyMongoError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
@@ -29,8 +29,22 @@ class DeleteResult:
 class InMemoryCollection:
     def __init__(self):
         self.docs = []
+        self.unique_indexes = []
 
-    def create_index(self, *args, **kwargs):
+    def create_index(self, keys, unique=False, **kwargs):
+        if not unique:
+            return None
+
+        if isinstance(keys, str):
+            fields = (keys,)
+        elif isinstance(keys, list):
+            fields = tuple(key for key, _direction in keys)
+        elif isinstance(keys, tuple) and len(keys) == 2 and isinstance(keys[0], str):
+            fields = (keys[0],)
+        else:
+            fields = tuple(keys)
+
+        self.unique_indexes.append(fields)
         return None
 
     def _matches(self, doc, query):
@@ -38,6 +52,16 @@ class InMemoryCollection:
             if doc.get(key) != value:
                 return False
         return True
+
+    def _validate_unique_constraints(self, doc, ignore_doc_id=None):
+        for fields in self.unique_indexes:
+            if any(field not in doc for field in fields):
+                continue
+            for existing in self.docs:
+                if ignore_doc_id is not None and existing.get('_id') == ignore_doc_id:
+                    continue
+                if all(existing.get(field) == doc.get(field) for field in fields):
+                    raise DuplicateKeyError(f'Duplicate key for unique index: {fields}')
 
     def find_one(self, query, projection=None):
         for doc in self.docs:
@@ -51,6 +75,7 @@ class InMemoryCollection:
     def insert_one(self, doc):
         saved = dict(doc)
         saved['_id'] = saved.get('_id', ObjectId())
+        self._validate_unique_constraints(saved)
         self.docs.append(saved)
         return InsertResult(saved['_id'])
 
@@ -58,11 +83,22 @@ class InMemoryCollection:
         query = query or {}
         return [dict(doc) for doc in self.docs if self._matches(doc, query)]
 
-    def update_one(self, query, update):
+    def update_one(self, query, update, upsert=False):
+        set_values = update.get('$set', {})
+
         for idx, doc in enumerate(self.docs):
             if self._matches(doc, query):
-                self.docs[idx] = {**doc, **update.get('$set', {})}
+                updated_doc = {**doc, **set_values}
+                self._validate_unique_constraints(updated_doc, ignore_doc_id=doc.get('_id'))
+                self.docs[idx] = updated_doc
                 return UpdateResult(1)
+
+        if upsert:
+            new_doc = dict(query)
+            new_doc.update(set_values)
+            self.insert_one(new_doc)
+            return UpdateResult(1)
+
         return UpdateResult(0)
 
     def delete_one(self, query):
@@ -107,8 +143,8 @@ class FileBackedCollection(InMemoryCollection):
         self._save()
         return result
 
-    def update_one(self, query, update):
-        result = super().update_one(query, update)
+    def update_one(self, query, update, upsert=False):
+        result = super().update_one(query, update, upsert=upsert)
         if result.matched_count:
             self._save()
         return result
@@ -137,6 +173,7 @@ SETTINGS_COLLECTION = os.getenv('SETTINGS_COLLECTION', 'settings')
 
 
 app = Flask(__name__)
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'change-me-in-production')
 FRONTEND_DIR = Path(__file__).resolve().parent.parent / 'frontend'
 
 mongo_enabled = True
@@ -157,6 +194,7 @@ except Exception:
     settings = FileBackedCollection(fallback_dir / f'{SETTINGS_COLLECTION}.json')
 
 users.create_index('username', unique=True)
+candidates.create_index([('name', 1), ('party', 1)], unique=True)
 votes.create_index('voterUsername', unique=True)
 settings.create_index('key', unique=True)
 
@@ -254,10 +292,39 @@ def register() -> tuple:
 
     try:
         users.insert_one(user_doc)
+    except DuplicateKeyError:
+        return jsonify({'error': 'username already exists'}), 409
     except PyMongoError:
         return jsonify({'error': 'failed to save user'}), 500
 
     return jsonify({'message': 'registration successful', 'username': username}), 201
+
+
+def _current_user(required_role: str | None = None):
+    username = session.get('username')
+    if not username:
+        return None
+
+    user = users.find_one({'username': username})
+    if not user:
+        session.clear()
+        return None
+
+    if required_role and user.get('role') != required_role:
+        return None
+
+    return user
+
+
+def _user_payload(user: dict) -> dict:
+    return {
+        'id': str(user['_id']),
+        'fullName': user['fullName'],
+        'username': user['username'],
+        'role': user.get('role', 'voter'),
+    }
+
+
 
 
 def _authenticate_user() -> tuple:
@@ -272,20 +339,12 @@ def _authenticate_user() -> tuple:
     if not user or not check_password_hash(user['passwordHash'], password):
         return jsonify({'error': 'invalid credentials'}), 401
 
-    return (
-        jsonify(
-            {
-                'message': 'login successful',
-                'user': {
-                    'id': str(user['_id']),
-                    'fullName': user['fullName'],
-                    'username': user['username'],
-                    'role': user.get('role', 'voter'),
-                },
-            }
-        ),
-        200,
-    )
+    session.clear()
+    session['userId'] = str(user['_id'])
+    session['username'] = user['username']
+    session['role'] = user.get('role', 'voter')
+
+    return jsonify({'message': 'login successful', 'user': _user_payload(user)}), 200
 
 
 @app.post('/login')
@@ -309,20 +368,28 @@ def admin_login() -> tuple:
     if user.get('role') != 'admin':
         return jsonify({'error': 'admin access required'}), 403
 
-    return (
-        jsonify(
-            {
-                'message': 'login successful',
-                'user': {
-                    'id': str(user['_id']),
-                    'fullName': user['fullName'],
-                    'username': user['username'],
-                    'role': user.get('role', 'voter'),
-                },
-            }
-        ),
-        200,
-    )
+    session.clear()
+    session['userId'] = str(user['_id'])
+    session['username'] = user['username']
+    session['role'] = user.get('role', 'voter')
+
+    return jsonify({'message': 'login successful', 'user': _user_payload(user)}), 200
+
+
+
+@app.post('/logout')
+def logout() -> tuple:
+    session.clear()
+    return jsonify({'message': 'logout successful'}), 200
+
+
+@app.get('/session/me')
+def session_me() -> tuple:
+    user = _current_user()
+    if not user:
+        return jsonify({'error': 'not authenticated'}), 401
+
+    return jsonify({'user': _user_payload(user)}), 200
 
 
 @app.get('/users/<username>')
@@ -344,6 +411,10 @@ def list_candidates() -> tuple:
 
 @app.post('/candidates')
 def create_candidate() -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     payload = request.get_json(silent=True) or {}
     name = (payload.get('name') or '').strip()
     party = (payload.get('party') or '').strip()
@@ -361,6 +432,8 @@ def create_candidate() -> tuple:
 
     try:
         result = candidates.insert_one(candidate_doc)
+    except DuplicateKeyError:
+        return jsonify({'error': 'candidate with same name and party already exists'}), 409
     except PyMongoError:
         return jsonify({'error': 'failed to add candidate'}), 500
 
@@ -370,6 +443,10 @@ def create_candidate() -> tuple:
 
 @app.put('/candidates/<candidate_id>')
 def update_candidate(candidate_id: str) -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     payload = request.get_json(silent=True) or {}
     update_fields = {}
 
@@ -403,16 +480,15 @@ def cast_vote() -> tuple:
     if not get_election_status():
         return jsonify({'error': 'Election is currently closed by admin.'}), 403
 
+    user = _current_user(required_role='voter')
+    if not user:
+        return jsonify({'error': 'authentication required'}), 401
+
     payload = request.get_json(silent=True) or {}
-    voter_username = (payload.get('voterUsername') or '').strip().lower()
     candidate_id = (payload.get('candidateId') or '').strip()
 
-    if not voter_username or not candidate_id:
-        return jsonify({'error': 'voterUsername and candidateId are required'}), 400
-
-    voter = users.find_one({'username': voter_username})
-    if not voter or voter.get('role') != 'voter':
-        return jsonify({'error': 'voter not found'}), 404
+    if not candidate_id:
+        return jsonify({'error': 'candidateId is required'}), 400
 
     try:
         candidate_object_id = ObjectId(candidate_id)
@@ -423,9 +499,8 @@ def cast_vote() -> tuple:
     if not candidate:
         return jsonify({'error': 'candidate not found'}), 404
 
-    previous_vote = votes.find_one({'voterUsername': voter_username})
     vote_doc = {
-        'voterUsername': voter_username,
+        'voterUsername': user['username'],
         'candidateId': candidate_object_id,
         'candidateName': candidate.get('name', ''),
         'party': candidate.get('party', ''),
@@ -433,10 +508,12 @@ def cast_vote() -> tuple:
     }
 
     try:
+        previous_vote = votes.find_one({'voterUsername': user['username']})
+        votes.update_one({'voterUsername': user['username']}, {'$set': vote_doc}, upsert=True)
         if previous_vote:
-            votes.update_one({'_id': previous_vote['_id']}, {'$set': vote_doc})
             return jsonify({'message': 'vote updated successfully'}), 200
-        votes.insert_one(vote_doc)
+    except DuplicateKeyError:
+        return jsonify({'error': 'duplicate vote record detected'}), 409
     except PyMongoError:
         return jsonify({'error': 'failed to save vote'}), 500
 
@@ -445,11 +522,19 @@ def cast_vote() -> tuple:
 
 @app.get('/admin/election/status')
 def election_status() -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     return jsonify({'isOpen': get_election_status()}), 200
 
 
 @app.post('/admin/election/status')
 def update_election_status() -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     payload = request.get_json(silent=True) or {}
     if 'isOpen' not in payload:
         return jsonify({'error': 'isOpen is required'}), 400
@@ -458,12 +543,17 @@ def update_election_status() -> tuple:
     settings.update_one(
         {'key': 'election_status'},
         {'$set': {'isOpen': is_open, 'updatedAt': datetime.now(timezone.utc).isoformat()}},
+        upsert=True,
     )
     return jsonify({'message': f"Election {'opened' if is_open else 'closed'} successfully", 'isOpen': is_open}), 200
 
 
 @app.get('/admin/analytics')
 def admin_analytics() -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     all_candidates = list(candidates.find())
     all_votes = list(votes.find())
     all_users = list(users.find())
@@ -510,13 +600,23 @@ def admin_analytics() -> tuple:
 
 @app.post('/admin/reset-votes')
 def reset_votes() -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     result = votes.delete_many({})
     return jsonify({'message': 'All votes reset successfully', 'deletedCount': result.deleted_count}), 200
 
 
 @app.get('/votes/<username>')
 def get_vote(username: str) -> tuple:
+    current_user = _current_user()
+    if not current_user:
+        return jsonify({'error': 'authentication required'}), 401
+
     normalized_username = username.strip().lower()
+    if current_user.get('role') != 'admin' and current_user.get('username') != normalized_username:
+        return jsonify({'error': 'forbidden'}), 403
     vote = votes.find_one({'voterUsername': normalized_username})
     if not vote:
         return jsonify({'hasVoted': False}), 200
@@ -537,6 +637,10 @@ def get_vote(username: str) -> tuple:
 
 @app.delete('/candidates/<candidate_id>')
 def delete_candidate(candidate_id: str) -> tuple:
+    admin_user = _current_user(required_role='admin')
+    if not admin_user:
+        return jsonify({'error': 'admin authentication required'}), 401
+
     try:
         object_id = ObjectId(candidate_id)
     except Exception:
