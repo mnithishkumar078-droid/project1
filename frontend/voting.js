@@ -14,20 +14,31 @@ function setVoteStatus(message, type = 'success') {
     container.parentElement.insertBefore(messageBox, container);
 }
 
-function setupUserHeader() {
-    const storedUser = localStorage.getItem('currentUser');
-    if (!storedUser) {
+
+async function hydrateUserFromSession() {
+    try {
+        const response = await fetch('/session/me', { credentials: 'include' });
+        if (!response.ok) {
+            localStorage.removeItem('currentUser');
+            return null;
+        }
+
+        const result = await response.json();
+        return result.user || null;
+    } catch (error) {
+        return null;
+    }
+}
+
+async function setupUserHeader() {
+    const sessionUser = await hydrateUserFromSession();
+    if (!sessionUser || sessionUser.role !== 'voter') {
         window.location.href = 'login.html';
         return;
     }
 
-    try {
-        activeUser = JSON.parse(storedUser);
-    } catch (error) {
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
-        return;
-    }
+    activeUser = sessionUser;
+    localStorage.setItem('currentUser', JSON.stringify(sessionUser));
 
     const fullNameDisplay = document.getElementById('fullNameDisplay');
     if (fullNameDisplay) {
@@ -36,7 +47,12 @@ function setupUserHeader() {
 
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await fetch('/logout', { method: 'POST', credentials: 'include' });
+            } catch (error) {
+                console.error(error);
+            }
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         });
@@ -48,7 +64,7 @@ async function getVoteInfo() {
         return { hasVoted: false };
     }
 
-    const response = await fetch(`/votes/${encodeURIComponent(activeUser.username)}`);
+    const response = await fetch(`/votes/${encodeURIComponent(activeUser.username)}`, { credentials: 'include' });
     if (!response.ok) {
         return { hasVoted: false };
     }
@@ -62,6 +78,7 @@ async function castVote(candidateId) {
 
     try {
         const response = await fetch('/votes', {
+            credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ voterUsername: activeUser.username, candidateId })
@@ -84,7 +101,7 @@ async function loadCandidates() {
     candidateList.innerHTML = '<p class="loading-state">Loading candidates...</p>';
 
     try {
-        const [candidateResponse, voteInfo] = await Promise.all([fetch('/candidates'), getVoteInfo()]);
+        const [candidateResponse, voteInfo] = await Promise.all([fetch('/candidates', { credentials: 'include' }), getVoteInfo()]);
         if (!candidateResponse.ok) {
             throw new Error('Failed to fetch candidates');
         }
@@ -125,5 +142,10 @@ async function loadCandidates() {
 }
 
 window.voteNow = castVote;
-setupUserHeader();
-loadCandidates();
+
+(async () => {
+    await setupUserHeader();
+    if (activeUser) {
+        await loadCandidates();
+    }
+})();

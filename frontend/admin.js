@@ -1,7 +1,29 @@
-const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-if (currentUser.role !== 'admin') {
-    window.location.href = 'admin-login.html';
+
+async function validateAdminSession() {
+    try {
+        const response = await fetch('/session/me', { credentials: 'include' });
+        if (!response.ok) {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'admin-login.html';
+            return false;
+        }
+
+        const result = await response.json();
+        if (result.user?.role !== 'admin') {
+            window.location.href = 'admin-login.html';
+            return false;
+        }
+
+        currentUser = result.user;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        return true;
+    } catch (error) {
+        window.location.href = 'admin-login.html';
+        return false;
+    }
 }
+
+let currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
 
 const logoutBtn = document.getElementById('adminLogoutBtn');
 const candidateForm = document.getElementById('candidateForm');
@@ -16,8 +38,13 @@ let selectedImageData = '';
 let latestAnalytics = null;
 
 if (logoutBtn) {
-    logoutBtn.addEventListener('click', (event) => {
+    logoutBtn.addEventListener('click', async (event) => {
         event.preventDefault();
+        try {
+            await fetch('/logout', { method: 'POST', credentials: 'include' });
+        } catch (error) {
+            console.error(error);
+        }
         localStorage.removeItem('currentUser');
         window.location.href = 'index.html';
     });
@@ -46,7 +73,7 @@ async function fileToDataUrl(file) {
 }
 
 async function fetchCandidates() {
-    const response = await fetch('/candidates');
+    const response = await fetch('/candidates', { credentials: 'include' });
     if (!response.ok) {
         throw new Error('Failed to load candidates');
     }
@@ -132,7 +159,7 @@ function updateAnalyticsUi(data) {
 
 async function loadAnalytics() {
     try {
-        const response = await fetch('/admin/analytics');
+        const response = await fetch('/admin/analytics', { credentials: 'include' });
         if (!response.ok) {
             throw new Error('Unable to load analytics');
         }
@@ -154,7 +181,7 @@ window.editCandidate = function (id, name, party) {
 
 window.removeCandidate = async function (id) {
     try {
-        const response = await fetch(`/candidates/${id}`, { method: 'DELETE' });
+        const response = await fetch(`/candidates/${id}`, { method: 'DELETE', credentials: 'include' });
         if (!response.ok) {
             throw new Error('Delete failed');
         }
@@ -212,6 +239,7 @@ candidateForm.addEventListener('submit', async (event) => {
 
     try {
         const response = await fetch(id ? `/candidates/${id}` : '/candidates', {
+            credentials: 'include',
             method: id ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -242,6 +270,7 @@ toggleElectionBtn.addEventListener('click', async () => {
 
     try {
         const response = await fetch('/admin/election/status', {
+            credentials: 'include',
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ isOpen: !latestAnalytics.isElectionOpen })
@@ -266,7 +295,7 @@ resetVotesBtn.addEventListener('click', async () => {
     }
 
     try {
-        const response = await fetch('/admin/reset-votes', { method: 'POST' });
+        const response = await fetch('/admin/reset-votes', { method: 'POST', credentials: 'include' });
         const result = await response.json();
         if (!response.ok) {
             throw new Error(result.error || 'Unable to reset votes');
@@ -305,5 +334,12 @@ document.getElementById('resetBtn').addEventListener('click', () => {
     setStatus('Form reset.');
 });
 
-loadAdminCandidates();
-loadAnalytics();
+(async () => {
+    const isValid = await validateAdminSession();
+    if (!isValid) {
+        return;
+    }
+
+    await loadAdminCandidates();
+    await loadAnalytics();
+})();
