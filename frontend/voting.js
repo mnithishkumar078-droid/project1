@@ -33,7 +33,7 @@ async function hydrateUserFromSession() {
 async function setupUserHeader() {
     const sessionUser = await hydrateUserFromSession();
     if (!sessionUser || sessionUser.role !== 'voter') {
-        window.location.href = 'login.html';
+        window.location.href = 'register.html';
         return;
     }
 
@@ -73,6 +73,7 @@ async function getVoteInfo() {
 
 async function castVote(candidateId) {
     if (!activeUser?.username) {
+        window.location.href = 'register.html';
         return;
     }
 
