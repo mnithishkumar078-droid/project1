@@ -539,11 +539,12 @@ def cast_vote() -> tuple:
         'votedAt': datetime.now(timezone.utc).isoformat(),
     }
 
+    existing_vote = votes.find_one({'voterUsername': user['username']})
+    if existing_vote:
+        return jsonify({'error': 'You have already voted. Vote cannot be changed.'}), 409
+
     try:
-        previous_vote = votes.find_one({'voterUsername': user['username']})
-        votes.update_one({'voterUsername': user['username']}, {'$set': vote_doc}, upsert=True)
-        if previous_vote:
-            return jsonify({'message': 'vote updated successfully'}), 200
+        votes.insert_one(vote_doc)
     except DuplicateKeyError:
         return jsonify({'error': 'duplicate vote record detected'}), 409
     except PyMongoError:
