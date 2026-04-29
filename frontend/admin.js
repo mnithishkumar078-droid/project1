@@ -95,8 +95,8 @@ function renderCandidates(candidates) {
                     <h3>${candidate.name}</h3>
                     <p>${candidate.party}</p>
                     <div class="admin-actions">
-                        <button class="btn btn-primary" onclick="editCandidate('${candidate.id}', '${candidate.name.replace(/'/g, "\\'")}', '${candidate.party.replace(/'/g, "\\'")}')">Edit</button>
-                        <button class="btn btn-secondary" onclick="removeCandidate('${candidate.id}')">Delete</button>
+                        <button class="btn btn-primary edit-candidate-btn" data-id="${candidate.id}" data-name="${encodeURIComponent(candidate.name)}" data-party="${encodeURIComponent(candidate.party)}">Edit</button>
+                        <button class="btn btn-secondary delete-candidate-btn" data-id="${candidate.id}">Delete</button>
                     </div>
                 </div>
             </article>
@@ -178,6 +178,24 @@ window.editCandidate = function (id, name, party) {
     selectedImageData = '';
     setStatus('Editing candidate. Upload new image only if replacing existing one.', 'success');
 };
+
+
+adminCandidateList.addEventListener('click', async (event) => {
+    const editButton = event.target.closest('.edit-candidate-btn');
+    if (editButton) {
+        const candidateId = editButton.dataset.id || '';
+        const candidateName = decodeURIComponent(editButton.dataset.name || '');
+        const candidateParty = decodeURIComponent(editButton.dataset.party || '');
+        window.editCandidate(candidateId, candidateName, candidateParty);
+        return;
+    }
+
+    const deleteButton = event.target.closest('.delete-candidate-btn');
+    if (deleteButton) {
+        const candidateId = deleteButton.dataset.id || '';
+        await window.removeCandidate(candidateId);
+    }
+});
 
 window.removeCandidate = async function (id) {
     try {
