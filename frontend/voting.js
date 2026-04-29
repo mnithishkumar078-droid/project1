@@ -132,8 +132,10 @@ async function loadCandidates() {
                             <h3>${candidate.name}</h3>
                             <p>${candidate.party}</p>
                             ${
-                                isSelected
-                                    ? `<button class="btn btn-secondary" disabled>Voted Candidate</button>`
+                                voteInfo.hasVoted
+                                    ? isSelected
+                                      ? `<button class="btn btn-secondary" disabled>Voted Candidate</button>`
+                                      : `<button class="btn btn-secondary" disabled>Voting Closed For You</button>`
                                     : pendingCandidateId === candidate.id
                                       ? `
                                         <div class="vote-action-group">
