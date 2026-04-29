@@ -1,4 +1,5 @@
 let activeUser = null;
+let pendingCandidateId = null;
 
 function setVoteStatus(message, type = 'success') {
     const container = document.getElementById('candidateList');
@@ -90,11 +91,18 @@ async function castVote(candidateId) {
             throw new Error(result.error || 'Unable to submit vote');
         }
 
+        pendingCandidateId = null;
         setVoteStatus(result.message, 'success');
         await loadCandidates();
     } catch (error) {
         setVoteStatus(error.message, 'error');
     }
+}
+
+function startVoteConfirmation(candidateId) {
+    pendingCandidateId = candidateId;
+    setVoteStatus('Please confirm your vote by clicking the Confirm Vote button.', 'success');
+    loadCandidates();
 }
 
 async function loadCandidates() {
@@ -123,9 +131,18 @@ async function loadCandidates() {
                         <div class="candidate-info">
                             <h3>${candidate.name}</h3>
                             <p>${candidate.party}</p>
-                            <button class="btn ${isSelected ? 'btn-secondary' : 'btn-primary'}" onclick="voteNow('${candidate.id}')">
-                                ${isSelected ? 'Voted Candidate' : 'Vote Now'}
-                            </button>
+                            ${
+                                isSelected
+                                    ? `<button class="btn btn-secondary" disabled>Voted Candidate</button>`
+                                    : pendingCandidateId === candidate.id
+                                      ? `
+                                        <div class="vote-action-group">
+                                            <button class="btn btn-primary" onclick="confirmVoteNow('${candidate.id}')">Confirm Vote</button>
+                                            <button class="btn btn-secondary" onclick="cancelVoteConfirmation()">Cancel</button>
+                                        </div>
+                                    `
+                                      : `<button class="btn btn-primary" onclick="voteNow('${candidate.id}')">Vote Now</button>`
+                            }
                         </div>
                     </article>
                 `;
@@ -142,7 +159,12 @@ async function loadCandidates() {
     }
 }
 
-window.voteNow = castVote;
+window.voteNow = startVoteConfirmation;
+window.confirmVoteNow = castVote;
+window.cancelVoteConfirmation = () => {
+    pendingCandidateId = null;
+    loadCandidates();
+};
 
 (async () => {
     await setupUserHeader();
