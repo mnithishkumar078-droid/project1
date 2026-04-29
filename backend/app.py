@@ -336,7 +336,27 @@ def _authenticate_user() -> tuple:
         return jsonify({'error': 'username and password are required'}), 400
 
     user = users.find_one({'username': username})
-    if not user or not check_password_hash(user['passwordHash'], password):
+    if not user:
+        return jsonify({'error': 'invalid credentials'}), 401
+
+    password_hash = user.get('passwordHash')
+    plain_password = user.get('password')
+
+    # Backward compatibility:
+    # Older records may contain plaintext "password" instead of "passwordHash".
+    if password_hash:
+        is_valid_password = check_password_hash(password_hash, password)
+    elif plain_password is not None:
+        is_valid_password = plain_password == password
+        if is_valid_password:
+            users.update_one(
+                {'_id': user['_id']},
+                {'$set': {'passwordHash': generate_password_hash(password)}, '$unset': {'password': ''}},
+            )
+    else:
+        is_valid_password = False
+
+    if not is_valid_password:
         return jsonify({'error': 'invalid credentials'}), 401
 
     session.clear()
