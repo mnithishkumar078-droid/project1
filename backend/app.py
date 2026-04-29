@@ -271,7 +271,7 @@ def register() -> tuple:
     payload = request.get_json(silent=True) or {}
     full_name = (payload.get('fullName') or '').strip()
     username = (payload.get('username') or '').strip().lower()
-    password = payload.get('password') or ''
+    password = (payload.get('password') or '').strip()
 
     if not full_name or not username or not password:
         return jsonify({'error': 'fullName, username, and password are required'}), 400
@@ -330,7 +330,7 @@ def _user_payload(user: dict) -> dict:
 def _authenticate_user() -> tuple:
     payload = request.get_json(silent=True) or {}
     username = (payload.get('username') or '').strip().lower()
-    password = payload.get('password') or ''
+    password = (payload.get('password') or '').strip()
 
     if not username or not password:
         return jsonify({'error': 'username and password are required'}), 400
