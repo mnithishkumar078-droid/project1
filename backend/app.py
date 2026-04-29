@@ -422,10 +422,22 @@ def get_user(username: str) -> tuple:
     return jsonify(user), 200
 
 
+def _sortable_timestamp(value) -> str:
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if value is None:
+        return ''
+    return str(value)
+
+
 @app.get('/candidates')
 def list_candidates() -> tuple:
-    candidate_rows = candidates.find()
-    sorted_rows = sorted(candidate_rows, key=lambda row: row.get('updatedAt', ''), reverse=True)
+    try:
+        candidate_rows = list(candidates.find())
+    except PyMongoError:
+        return jsonify({'error': 'failed to fetch candidates'}), 500
+
+    sorted_rows = sorted(candidate_rows, key=lambda row: _sortable_timestamp(row.get('updatedAt')), reverse=True)
     return jsonify([normalize_candidate(doc) for doc in sorted_rows]), 200
 
 
